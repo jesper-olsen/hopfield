@@ -18,10 +18,10 @@ or with the iterative  perceptron convergence procedure:
 
 References:
 -----------
-[1] [Neural networks and physical systems with emergent collective computational abilities, J.J. Hopfield, Proc. Natl. Acad. Sci., Vol 79, pp2554-2558, April 1982](https://www.pnas.org/doi/epdf/10.1073/pnas.79.8.2554)
-[2] [Hinton's coursera lecture 11a](https://www.cs.toronto.edu/~hinton/coursera/lecture11/lec11a.mp4)
-[3] [Hinton's coursera lecture 11b](https://www.cs.toronto.edu/~hinton/coursera/lecture11/lec11b.mp4)
-[4] [CMU Lectures 20-22](https://youtu.be/3Cp_pjPRmt8?si=VXghIuz-V9rDdQGN)
+[1] [Neural networks and physical systems with emergent collective computational abilities, J.J. Hopfield, Proc. Natl. Acad. Sci., Vol 79, pp2554-2558, April 1982](https://www.pnas.org/doi/epdf/10.1073/pnas.79.8.2554) <br/>
+[2] [Hinton's coursera lecture 11a](https://www.cs.toronto.edu/~hinton/coursera/lecture11/lec11a.mp4) <br/>
+[3] [Hinton's coursera lecture 11b](https://www.cs.toronto.edu/~hinton/coursera/lecture11/lec11b.mp4) <br/>
+[4] [CMU Lectures 20-22](https://youtu.be/3Cp_pjPRmt8?si=VXghIuz-V9rDdQGN) <br/>
 
 Run:
 ----
