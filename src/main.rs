@@ -1,27 +1,16 @@
 use core::fmt;
-//use font8x8::*;
-//use core::ops::Mul;
-//use std::default::Default;
-//use std::ops::{AddAssign, Sub};
 
 fn state2u64(state: &[u8]) -> u64 {
-    let mut b: u64 = 0;
-    for (i, x) in state.iter().enumerate() {
-        if *x != 0 {
-            b |= 1 << i
-        }
-    }
-    b
+    state
+        .iter()
+        .enumerate()
+        .fold(0, |b, (i, &x)| b | ((x as u64) << i))
 }
 
 fn u64_to_state(b: u64) -> Vec<u8> {
-    let mut v = vec![0; 64];
-    for i in 0..64 {
-        if b & (1 << i) != 0 {
-            v[i] = 1;
-        }
-    }
-    v
+    (0..64)
+        .map(|i| if b & (1 << i) != 0 { 1 } else { 0 })
+        .collect()
 }
 
 struct HopfieldNet {
@@ -47,10 +36,9 @@ impl HopfieldNet {
     fn new(state: &[u8]) -> Self {
         // add a bias term - state that is always on
         let size = state.len() + 1;
-        let mut s0 = vec![1; size];
-        for i in 1..size {
-            s0[i] = state[i - 1]
-        }
+        let mut s0 = Vec::with_capacity(size);
+        s0.push(1);
+        s0.extend_from_slice(state);
         let num_elements = (size * (size - 1)) / 2;
         Self {
             weights: vec![0; num_elements],
@@ -88,14 +76,14 @@ impl HopfieldNet {
         }
     }
 
-    fn hopfield_storage_rule(&mut self, s: u64) {
+    fn hopfield_storage_rule(&mut self) {
         // 4*(si-0.5)(sj-0.5)
-        for i in 0..64 {
-            let si: i32 = ((s >> i) & 1).try_into().unwrap();
-            for j in 0..64 {
-                let sj: i32 = ((s >> j) & 1).try_into().unwrap();
+        for i in 1..self.state.len() {
+            let si: i32 = self.state[i].into();
+            for j in 0..self.state.len() {
+                let sj: i32 = self.state[j].into();
                 let dw: i32 = 4 * si * sj - 2 * si - 2 * sj + 1;
-                self.update_weight(i + 1, j + 1, dw)
+                self.update_weight(i, j, dw)
             }
         }
     }
@@ -104,11 +92,12 @@ impl HopfieldNet {
         let size = self.state.len();
         let mut change = false;
         for i in 1..size {
-            let mut e = 0;
-            for j in 0..size {
-                let sj: i32 = self.state[j].try_into().unwrap();
-                e += sj * self.get_weight(i, j);
-            }
+            let e = self
+                .state
+                .iter()
+                .enumerate()
+                .map(|(j, &sj)| sj as i32 * self.get_weight(i, j))
+                .sum::<i32>();
             let sign = match self.state[i] {
                 0 if e >= 0 => -1,
                 1 if e < 0 => 1,
@@ -128,11 +117,12 @@ impl HopfieldNet {
     fn step(&mut self) {
         let size = self.state.len();
         for i in 1..size {
-            let mut e = 0;
-            for j in 0..size {
-                let sj: i32 = self.state[j].try_into().unwrap();
-                e += sj * self.get_weight(i, j);
-            }
+            let e = self
+                .state
+                .iter()
+                .enumerate()
+                .map(|(j, &sj)| sj as i32 * self.get_weight(i, j))
+                .sum::<i32>();
             self.state[i] = if e < 0 { 0 } else { 1 };
         }
     }
@@ -142,20 +132,18 @@ impl HopfieldNet {
     }
 
     fn energy(&self) -> i32 {
-        let mut e: i32 = 0;
-        for i in 0..self.state.len() {
-            for j in 0..i {
-                e -= self.state[i] as i32 * self.state[j] as i32 * self.get_weight(i, j);
-            }
-        }
-        e
+        -(0..self.state.len())
+            .flat_map(|i| {
+                (0..i).map(move |j| {
+                    self.state[i] as i32 * self.state[j] as i32 * self.get_weight(i, j)
+                })
+            })
+            .sum::<i32>()
     }
 
     fn set_state(&mut self, state: &[u8]) {
         assert_eq!(self.state.len(), state.len() + 1);
-        for i in 1..self.state.len() {
-            self.state[i] = state[i - 1]
-        }
+        self.state[1..].copy_from_slice(state);
     }
 
     fn get_state(&self) -> &[u8] {
@@ -169,7 +157,9 @@ fn main() {
         for i in 0x61..0x64 {
             let b = font8x8::unicode2bitmap(i);
             font8x8::display(b);
-            net.hopfield_storage_rule(b);
+            let v = u64_to_state(b);
+            net.set_state(&v);
+            net.hopfield_storage_rule();
         }
     } else {
         for _ in 0..3 {
@@ -188,7 +178,6 @@ fn main() {
         }
     }
     for i in 0x64..=0x66 {
-        //for i in 0x61..0x64 {
         let ch = char::from_u32(i as u32).unwrap();
         println!("Initialising with {ch}");
         let b = font8x8::unicode2bitmap(i);
@@ -200,7 +189,7 @@ fn main() {
         net.step();
         println!("Goodness2: {}", net.goodness());
         let v = net.get_state();
-        let b = state2u64(&v);
+        let b = state2u64(v);
         font8x8::display(b);
     }
 }
