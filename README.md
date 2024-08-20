@@ -44,9 +44,10 @@ Train network on letters a,b,c (8x8 font = 64-bit images); recognise from initia
 🟨🟨🟨🟨🟨🟨🟨🟨
 
 Initialising with d
-Goodness0: -43
-Goodness1: 452
-Goodness2: 452
+Goodness: -43
+Goodness: 452
+Goodness: 452
+Goodness: 452
 🟨🟨🟨🟨🟨🟨🟨🟨
 🟨🟨🟨🟨🟨🟨🟨🟨
 🟨🟦🟦🟦🟦🟨🟨🟨
@@ -57,9 +58,10 @@ Goodness2: 452
 🟨🟨🟨🟨🟨🟨🟨🟨
 
 Initialising with e
-Goodness0: 272
-Goodness1: 455
-Goodness2: 455
+Goodness: 272
+Goodness: 455
+Goodness: 455
+Goodness: 455
 🟨🟨🟨🟨🟨🟨🟨🟨
 🟨🟨🟨🟨🟨🟨🟨🟨
 🟨🟦🟦🟦🟦🟨🟨🟨
@@ -70,9 +72,10 @@ Goodness2: 455
 🟨🟨🟨🟨🟨🟨🟨🟨
 
 Initialising with f
-Goodness0: 53
-Goodness1: 1895
-Goodness2: 3493
+Goodness: 53
+Goodness: 1895
+Goodness: 3493
+Goodness: 3493
 🟦🟦🟦🟦🟦🟦🟦🟦
 🟦🟦🟦🟦🟦🟦🟦🟦
 🟦🟨🟨🟨🟨🟦🟦🟦
@@ -81,4 +84,5 @@ Goodness2: 3493
 🟨🟨🟦🟦🟨🟨🟦🟦
 🟦🟨🟨🟨🟨🟨🟦🟦
 🟦🟦🟦🟦🟦🟦🟦🟦
+
 ```

@@ -194,11 +194,11 @@ fn main() {
         let b = font8x8::unicode2bitmap(i);
         let v = u64_to_state(b);
         net.set_state(&v);
-        println!("Goodness0: {}", net.goodness());
-        net.step();
-        println!("Goodness1: {}", net.goodness());
-        net.step();
-        println!("Goodness2: {}", net.goodness());
+        println!("Goodness: {}", net.goodness());
+        for _ in 0..3 {
+            net.step();
+            println!("Goodness: {}", net.goodness());
+        }
         let v = net.get_state();
         let b = state2u64(v);
         font8x8::display(b);
