@@ -1,20 +1,7 @@
 Hopfield Networks
 =================
 
-Train a classic Hopfield networks [1,2,3,4] to store memories (bit vectors) using Hopfield's one-shot storage rule:
-
-    Hopfield with -1 & 1 states
-        delta w_ij = s_i * s_j
-    Hopfield with 0 & 1 states
-        delta w_ij = 4(s_i-0.5)(s_j-0.5)
-                   = 4(s_i*s_j -0.5s_i-0.5*s_j+0.25)
-                   = 4s_i*s_j -2s_i -2s_j + 1
-    For M memories, weights in range [-M;M] 
-
-or with the iterative  perceptron convergence procedure:
-    * if output unit is correct do nothing
-    * if incorrectly outputs zero, add input vector to weight vector
-    * if incorrectly outputs one, subtract input vector from weight vector 
+Train a classic Hopfield networks [1,2,3,4] to store memories (bit vectors) using Hopfield's one-shot storage rule or the iterative perceptron convergence procedure.:
 
 References:
 -----------

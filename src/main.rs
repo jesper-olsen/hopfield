@@ -77,7 +77,14 @@ impl HopfieldNet {
     }
 
     fn hopfield_storage_rule(&mut self) {
-        // 4*(si-0.5)(sj-0.5)
+        // Hopfield with -1 & 1 states
+        //     delta w_ij = s_i * s_j
+        // Hopfield with 0 & 1 states
+        //     delta w_ij = 4(s_i-0.5)(s_j-0.5)
+        //                = 4(s_i*s_j -0.5s_i-0.5*s_j+0.25)
+        //                = 4s_i*s_j -2s_i -2s_j + 1
+        // For M memories, weights in range [-M;M] 
+
         for i in 1..self.state.len() {
             let si: i32 = self.state[i].into();
             for j in 0..self.state.len() {
@@ -88,7 +95,11 @@ impl HopfieldNet {
         }
     }
 
-    fn perceptron_storage_rule(&mut self) -> bool {
+    fn perceptron_conv_procedure(&mut self) -> bool {
+        //* if output unit is correct do nothing
+        //* if incorrectly outputs zero, add input vector to weight vector
+        //* if incorrectly outputs one, subtract input vector from weight vector 
+
         let size = self.state.len();
         let mut change = false;
         for i in 1..size {
@@ -169,7 +180,7 @@ fn main() {
                 let v = u64_to_state(b);
                 net.set_state(&v);
                 for _ in 0..10 {
-                    let change = net.perceptron_storage_rule();
+                    let change = net.perceptron_conv_procedure();
                     if !change {
                         break;
                     }
