@@ -91,10 +91,10 @@ impl HopfieldNet {
     fn hopfield_storage_rule(&mut self, s: u64) {
         // 4*(si-0.5)(sj-0.5)
         for i in 0..64 {
-            let si: i8 = ((s >> i) & 1).try_into().unwrap();
+            let si: i32 = ((s >> i) & 1).try_into().unwrap();
             for j in 0..64 {
-                let sj: i8 = ((s >> j) & 1).try_into().unwrap();
-                let dw: i32 = (4 * si * sj - 2 * si - 2 * sj + 1).into();
+                let sj: i32 = ((s >> j) & 1).try_into().unwrap();
+                let dw: i32 = 4 * si * sj - 2 * si - 2 * sj + 1;
                 self.update_weight(i + 1, j + 1, dw)
             }
         }
