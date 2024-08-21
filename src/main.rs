@@ -132,7 +132,7 @@ impl HopfieldNet {
                 .state
                 .iter()
                 .enumerate()
-                .map(|(j, &sj)| sj as i32 * self.get_weight(i, j))
+                .map(|(j, &sj)| i32::from(sj) * self.get_weight(i, j))
                 .sum::<i32>();
             self.state[i] = if e < 0 { 0 } else { 1 };
         }
@@ -188,7 +188,7 @@ fn main() {
             }
         }
     }
-    for i in 0x64..=0x66 {
+    for i in 0x61..=0x66 {
         let ch = char::from_u32(i as u32).unwrap();
         println!("Initialising with {ch}");
         let b = font8x8::unicode2bitmap(i);
