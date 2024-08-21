@@ -1,7 +1,7 @@
 Hopfield Networks
 =================
 
-Train classic Hopfield networks [1,2,3,4] to store memories (bit vectors) using Hopfield's one-shot storage rule or the iterative perceptron convergence procedure.
+Train classic Hopfield networks [1,2,3] to store memories (bit vectors) using Hopfield's one-shot storage rule or the iterative perceptron convergence procedure.
 
 References:
 -----------
