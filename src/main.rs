@@ -188,20 +188,26 @@ fn main() {
             }
         }
     }
-    for i in 0x61..=0x66 {
-        let ch = char::from_u32(i as u32).unwrap();
-        println!("Initialising with {ch}");
-        let b = font8x8::unicode2bitmap(i);
-        let v = u64_to_state(b);
-        net.set_state(&v);
-        println!("Goodness: {}", net.goodness());
-        for _ in 0..3 {
-            net.step();
+    let mask0: u64 = 0xFFFFFFFFFFFFFFFF;
+    let mask1: u64 = 0xFFFFFFFF00000000;
+    let mask2: u64 = 0x00000000FFFFFFFF;
+    for (label,mask) in [("none",mask0), ("upper",mask1),("lower",mask2)] {
+        for i in 0x61..=0x66 {
+            let ch = char::from_u32(i as u32).unwrap();
+            println!("Initialising with {ch} - mask: {label}");
+            let b = mask & font8x8::unicode2bitmap(i);
+            font8x8::display(b);
+            let v = u64_to_state(b);
+            net.set_state(&v);
             println!("Goodness: {}", net.goodness());
+            for _ in 0..3 {
+                net.step();
+                println!("Goodness: {}", net.goodness());
+            }
+            let v = net.get_state();
+            let b = state2u64(v);
+            font8x8::display(b);
         }
-        let v = net.get_state();
-        let b = state2u64(v);
-        font8x8::display(b);
     }
 }
 
