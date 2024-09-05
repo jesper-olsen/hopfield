@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::fs::File;
 use std::io::{self, BufReader, Read};
+use gnuplot::{Figure, AxesCommon, Fix};
 
 fn read_u32(reader: &mut BufReader<File>) -> io::Result<u32> {
     let mut buf = [0u8; 4];
@@ -48,6 +49,29 @@ fn read_images(path: &str) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
     Ok(images)
 }
 
+fn plot_image(image: &[u8], rows: usize, cols: usize, label: u8) {
+    let mut fg = Figure::new();
+
+    // Reverse rows 
+    let z: Vec<f64> = image
+        .chunks(cols)  // Split into rows
+        .rev()         
+        .flat_map(|r| r.iter())  
+        .map(|&p| p as f64)
+        .collect();
+
+    // Plot the image using a heatmap
+    fg.axes2d()
+        .set_aspect_ratio(Fix(1.0))
+        .set_size(1.0, 1.0)
+        .set_x_range(Fix(0.0), Fix(cols as f64))
+        .set_y_range(Fix(0.0), Fix(rows as f64))
+        .image(z.iter(), rows, cols, Some((0.0, 0.0, cols as f64, rows as f64)), &[])
+        .set_title(&format!("MNIST Label: {}", label), &[]);  // Add the label as the title
+
+    fg.show().unwrap();
+}
+
 pub fn test() -> Result<(), Box<dyn Error>> {
     let dir = "MNIST/";
     for s in ["train", "t10k"] {
@@ -62,6 +86,9 @@ pub fn test() -> Result<(), Box<dyn Error>> {
             images.len(),
             images[0].len()
         );
+        for i in 0..5 {
+            plot_image(&images[i], 28, 28, labels[i]);
+        }
     }
 
     Ok(())
