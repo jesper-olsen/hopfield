@@ -1,0 +1,10 @@
+[package]
+name = "hopfield"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+font8x8 = { git = "https://github.com/jesper-olsen/font8x8-rs", branch = "master" }
+stmc_rs = { git = "https://github.com/jesper-olsen/stmc-rs", branch = "master" }
+gnuplot = "0.0.43"
+

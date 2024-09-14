@@ -1,75 +1,75 @@
 use std::error::Error;
-use std::fs::File;
-use std::io::{self, BufReader, Read};
-use gnuplot::{Figure, AxesCommon, Fix};
+    use std::fs::File;
+    use std::io::{self, BufReader, Read};
+    use gnuplot::{Figure, AxesCommon, Fix};
 
-fn read_u32(reader: &mut BufReader<File>) -> io::Result<u32> {
-    let mut buf = [0u8; 4];
-    reader.read_exact(&mut buf)?;
-    Ok(u32::from_be_bytes(buf))
-}
-
-fn read_labels(path: &str) -> Result<Vec<u8>, Box<dyn Error>> {
-    let file = File::open(path)?;
-    let mut reader = BufReader::new(file);
-
-    let magic_number = read_u32(&mut reader)?;
-    if magic_number != 2049 {
-        return Err("Invalid magic number for label file".into());
+    fn read_u32(reader: &mut BufReader<File>) -> io::Result<u32> {
+        let mut buf = [0u8; 4];
+        reader.read_exact(&mut buf)?;
+        Ok(u32::from_be_bytes(buf))
     }
 
-    let num_items = read_u32(&mut reader)?;
-    let mut labels = vec![0u8; num_items as usize];
-    reader.read_exact(&mut labels)?;
+    pub fn read_labels(path: &str) -> Result<Vec<u8>, Box<dyn Error>> {
+        let file = File::open(path)?;
+        let mut reader = BufReader::new(file);
 
-    Ok(labels)
-}
+        let magic_number = read_u32(&mut reader)?;
+        if magic_number != 2049 {
+            return Err("Invalid magic number for label file".into());
+        }
 
-fn read_images(path: &str) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
-    let file = File::open(path)?;
-    let mut reader = BufReader::new(file);
+        let num_items = read_u32(&mut reader)?;
+        let mut labels = vec![0u8; num_items as usize];
+        reader.read_exact(&mut labels)?;
 
-    let magic_number = read_u32(&mut reader)?;
-    if magic_number != 2051 {
-        return Err("Invalid magic number for image file".into());
+        Ok(labels)
     }
 
-    let num_images = read_u32(&mut reader)?;
-    let num_rows = read_u32(&mut reader)?;
-    let num_cols = read_u32(&mut reader)?;
-    let image_size = (num_rows * num_cols) as usize;
+    pub fn read_images(path: &str) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
+        let file = File::open(path)?;
+        let mut reader = BufReader::new(file);
 
-    let mut images = Vec::with_capacity(num_images as usize);
-    for _ in 0..num_images {
-        let mut image = vec![0u8; image_size];
-        reader.read_exact(&mut image)?;
-        images.push(image);
+        let magic_number = read_u32(&mut reader)?;
+        if magic_number != 2051 {
+            return Err("Invalid magic number for image file".into());
+        }
+
+        let num_images = read_u32(&mut reader)?;
+        let num_rows = read_u32(&mut reader)?;
+        let num_cols = read_u32(&mut reader)?;
+        let image_size = (num_rows * num_cols) as usize;
+
+        let mut images = Vec::with_capacity(num_images as usize);
+        for _ in 0..num_images {
+            let mut image = vec![0u8; image_size];
+            reader.read_exact(&mut image)?;
+            images.push(image);
+        }
+
+        Ok(images)
     }
 
-    Ok(images)
-}
+    pub fn plot_image(image: &[u8], rows: usize, cols: usize, label: u8) {
+        let mut fg = Figure::new();
 
-fn plot_image(image: &[u8], rows: usize, cols: usize, label: u8) {
-    let mut fg = Figure::new();
+        // Reverse rows 
+        let z: Vec<f64> = image
+            .chunks(cols)  // Split into rows
+            .rev()         
+            .flat_map(|r| r.iter())  
+            .map(|&p| p as f64)
+            .collect();
 
-    // Reverse rows 
-    let z: Vec<f64> = image
-        .chunks(cols)  // Split into rows
-        .rev()         
-        .flat_map(|r| r.iter())  
-        .map(|&p| p as f64)
-        .collect();
+        // Plot the image using a heatmap
+        fg.axes2d()
+            .set_aspect_ratio(Fix(1.0))
+            .set_size(1.0, 1.0)
+            .set_x_range(Fix(0.0), Fix(cols as f64))
+            .set_y_range(Fix(0.0), Fix(rows as f64))
+            .image(z.iter(), rows, cols, Some((0.0, 0.0, cols as f64, rows as f64)), &[])
+            .set_title(&format!("MNIST Label: {}", label), &[]);  // Add the label as the title
 
-    // Plot the image using a heatmap
-    fg.axes2d()
-        .set_aspect_ratio(Fix(1.0))
-        .set_size(1.0, 1.0)
-        .set_x_range(Fix(0.0), Fix(cols as f64))
-        .set_y_range(Fix(0.0), Fix(rows as f64))
-        .image(z.iter(), rows, cols, Some((0.0, 0.0, cols as f64, rows as f64)), &[])
-        .set_title(&format!("MNIST Label: {}", label), &[]);  // Add the label as the title
-
-    fg.show().unwrap();
+        fg.show().unwrap();
 }
 
 pub fn test() -> Result<(), Box<dyn Error>> {
