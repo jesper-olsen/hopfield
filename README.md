@@ -484,10 +484,11 @@ The MNIST images are 8-bit monochrome - for classic Hopfield networks the intens
 with quantisation and one-hot encoding using 2, 4 or 8 quantisation levels.
 The quantization level turns out to have little influence on accuracy:
 
-| Quantisation | Correcty |
-| 3 bits / 8 levels | 7833 |
-| 2 bits / 4 levels | 8045 |
-| 1 bit  / 2 levels | 8003 |
+| Quantisation      | Correcty |
+|-------------------|----------|
+| 3 bits / 8 levels | 7833     |
+| 2 bits / 4 levels | 8045     |
+| 1 bit  / 2 levels | 8003     |
 
 Accuracy is ~80% - the [Forward-Forward algorithm](https://github.com/jesper-olsen/ff-py) and [Deep Boltzmann machines](https://github.com/jesper-olsen/rbm-py) achieve better than 98% on the same task - though at the cost of considerably more complexity.
 
