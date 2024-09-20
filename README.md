@@ -15,7 +15,7 @@ References:
 
 
 ## Font8x8
-==========
+------------
 
 Run:
 ----
@@ -470,7 +470,7 @@ Goodness: 455
 ```
 
 ## MNIST
-=========
+------------
 
 ```
 % cargo run --bin main_mnist
@@ -489,14 +489,19 @@ Accuracy is ~80% - the [Forward-Forward algorithm](https://github.com/jesper-ols
 of considerably more complexity.
 
 Here is an example image from the test set:
-![PNG](https://raw.githubusercontent.com/jesper-olsen/mandelbrot-py/master/7-org.png) 
+![PNG](https://raw.githubusercontent.com/jesper-olsen/hopfield/master/7-org.png) 
 
 And same image after being extracted from the Hopfield network - 1 bit quantisation:
-![PNG](https://raw.githubusercontent.com/jesper-olsen/mandelbrot-py/master/7-q2.png) 
+
+![PNG](https://raw.githubusercontent.com/jesper-olsen/hopfield/master/7-q2.png) 
+
 and 2-bit quantisation:
-![PNG](https://raw.githubusercontent.com/jesper-olsen/mandelbrot-py/master/7-q4.png) 
+
+![PNG](https://raw.githubusercontent.com/jesper-olsen/hopfield/master/7-q4.png) 
+
 and 3-bit quantisation:
-![PNG](https://raw.githubusercontent.com/jesper-olsen/mandelbrot-py/master/7-q8.png) 
+
+![PNG](https://raw.githubusercontent.com/jesper-olsen/hopfield/master/7-q8.png) 
 
 
 
