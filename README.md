@@ -13,9 +13,9 @@ References:
 [2] [Hinton's Hopfield video 11a](https://www.cs.toronto.edu/~hinton/coursera/lecture11/lec11a.mp4) <br/>
 [3] [Hinton's Hopfield video 11b](https://www.cs.toronto.edu/~hinton/coursera/lecture11/lec11b.mp4) <br/>
 
-## Font8x8
 
-## MNIST
+## Font8x8
+==========
 
 Run:
 ----
@@ -24,7 +24,7 @@ Train network on letters a,b,c (8x8 font = 64-bit images); recognise from initia
 * mask upper 32 bits.
 * mask lower 32 bits.
 ```
-% cargo run
+% cargo run --bin main_font8x8
 
 🟨🟨🟨🟨🟨🟨🟨🟨
 🟨🟨🟨🟨🟨🟨🟨🟨
@@ -468,3 +468,35 @@ Goodness: 455
 🟨🟨🟨🟨🟨🟨🟨🟨
 
 ```
+
+## MNIST
+=========
+
+```
+% cargo run --bin main_mnist
+```
+
+The MNIST images are 8-bit monochrome - the Hopfield state is binary and intensity is here represented with a one-hot encodeing using 1, 2 or 3 bits.
+The quantization level turns out to have little influence on accuracy:
+
+| Quantisation | Correcty |
+| 3 bits / 8 levels | 7833 |
+| 2 bits / 4 levels | 8045 |
+| 1 bit  / 2 levels | 8003 |
+
+Accuracy is ~80% - the [Forward-Forward algorithm](https://github.com/jesper-olsen/ff-py) and  
+[Deep Boltzmann machines](https://github.com/jesper-olsen/rbm-py) achieve better than 98% on the same task - though at the cost
+of considerably more complexity.
+
+Here is an example image from the test set:
+![PNG](https://raw.githubusercontent.com/jesper-olsen/mandelbrot-py/master/7-org.png) 
+
+And same image after being extracted from the Hopfield network - 1 bit quantisation:
+![PNG](https://raw.githubusercontent.com/jesper-olsen/mandelbrot-py/master/7-q2.png) 
+and 2-bit quantisation:
+![PNG](https://raw.githubusercontent.com/jesper-olsen/mandelbrot-py/master/7-q4.png) 
+and 3-bit quantisation:
+![PNG](https://raw.githubusercontent.com/jesper-olsen/mandelbrot-py/master/7-q8.png) 
+
+
+

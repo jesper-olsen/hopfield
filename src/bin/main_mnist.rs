@@ -1,18 +1,18 @@
-use std::collections::HashSet;
 use hopfield::mnist;
 use hopfield::HopfieldNet;
-use stmc_rs::marsaglia::Marsaglia;
 
-const LLEN: usize = 10;
-const SS: usize = 8*28*28+LLEN+1;
+const LLEN: usize = 10;   // Number of labels
+const Q: u8 = 2; // Quantization levels, e.g. 2, 4, 8
+const D: u8 = (256usize/Q as usize) as u8;
+const SS: usize = Q as usize * 28*28+LLEN+1; // state length
 const DIR: &str = "MNIST/";
 
 fn image_to_state(label: &[u8], im: &[u8]) -> Vec<u8> {
     // one-hot encode intensity
     let p: Vec<u8> = im.iter()
         .flat_map(|&byte| {
-            let bin = (byte / 32) as usize; // 8 bins
-            (0..8).map(move |i| if i == bin { 1 } else { 0 })
+            let bin = byte / D; // D bins
+            (0..Q).map(move |i| if i == bin { 1 } else { 0 })
         })
         .collect();
 
@@ -23,22 +23,20 @@ fn image_to_state(label: &[u8], im: &[u8]) -> Vec<u8> {
     x
 }
 
-fn generate_unique_state_vectors(num_labels: usize, state_length: usize) -> Vec<Vec<u8>> {
-    let mut rng = Marsaglia::new(12, 34, 56, 78);
-    let mut state_vectors = HashSet::new();
+fn state_to_image(state: &[u8], label_len: usize) -> Vec<u8> {
+    let state = &state[label_len + 1..]; // Skip bias and label
 
-    while state_vectors.len() < num_labels {
-        let mut state = Vec::with_capacity(state_length);
-        for _ in 0..state_length {
-            let flag = if rng.uni() > 0.5 { 1 } else { 0 };
-            state.push(flag);
-        }
-
-        if state_vectors.insert(state) {
-            // Ensure uniqueness
-        }
-    }
-    state_vectors.into_iter().collect()
+    state
+        .chunks(Q as usize) // Each pixel is represented by D one-hot values
+        .map(|bin| {
+            // Decode the one-hot encoding back into intensity
+            bin.iter()
+                .enumerate()
+                .find(|(_, &v)| v == 1) // Find which bit is set to 1
+                .map(|(i, v)| (i as u8) * D) // Map back to intensity (0 to 255, D bins)
+                .unwrap_or(0) // Default to 0 if no bit is set (edge case)
+        })
+        .collect()
 }
 
 fn generate_one_hot_state_vectors(num_labels: usize, state_length: usize) -> Vec<Vec<u8>> {
@@ -50,7 +48,6 @@ fn generate_one_hot_state_vectors(num_labels: usize, state_length: usize) -> Vec
 }
 
 fn mnist_train(nepochs: usize) {
-    //let cb = generate_unique_state_vectors(10,LLEN);
     let cb = generate_one_hot_state_vectors(10, LLEN);
     for (i, v) in cb.iter().enumerate() {
         println!("{i}: {v:?}")
@@ -74,12 +71,9 @@ fn mnist_train(nepochs: usize) {
             }
         }
         let fname = format!("hop{j}.json");
-        //net.save_json(&fname).expect("failed to save");
         net.save_json(&fname).expect("failed to save");
-        let fname = format!("hop_weights{j}.bin");
-        net.save_weights(&fname).expect("failed to save");
     }
-    mnist_test(&mut net)
+    mnist_test(&cb, &mut net)
 }
 
 fn predict(cb: &[Vec<u8>], x: &[u8]) -> usize {
@@ -100,8 +94,7 @@ fn predict(cb: &[Vec<u8>], x: &[u8]) -> usize {
         mini
 }
 
-fn mnist_test(net: &HopfieldNet<SS>) {
-    let cb = generate_one_hot_state_vectors(10, LLEN);
+fn mnist_test(cb: &[Vec<u8>], net: &HopfieldNet<SS>) {
     let fname = format!("{DIR}t10k-labels.idx1-ubyte");
     let labels = mnist::read_labels(&fname).unwrap();
     println!("Read {} labels", labels.len());
@@ -134,15 +127,19 @@ fn mnist_test(net: &HopfieldNet<SS>) {
             correct += 1;
         }
         println!("correct {correct}/{n}");
+        
+        let imp=state_to_image(&x, 10);
+        println!("im len: {}, imp len: {} x len {}", im.len(), imp.len(), x.len());
+        mnist::plot_image(&im, 28,28,*lab);
+        mnist::plot_image(&imp, 28,28,*lab);
     }
 }
 
 fn main() {
-    //mnist_train(3);
-    //let mut hnet = hopfield::load_json("hop0.json").expect("Failed to load model");
+    mnist_train(1);
 
-    let fname = format!("hop_weights1.bin");
-    let mut net = HopfieldNet::<SS>::new();
-    net.load_weights(&fname).expect("failed to load weights");
-    mnist_test(&mut net);
+    //let fname = format!("WEIGHTS/hop0.json");
+    //let mut net = HopfieldNet::<SS>::load_json(&fname).expect("Failed to load Hopfield network");
+    //let cb = generate_one_hot_state_vectors(10, LLEN);
+    //mnist_test(&cb, &mut net);
 }

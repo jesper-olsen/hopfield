@@ -24,15 +24,6 @@ impl<const SS: usize> fmt::Display for HopfieldNet<SS> {
     }
 }
   
-//pub fn load_json(filename: &str) -> io::Result<HopfieldNet> {
-//    let mut file = File::open(filename)?;
-//    let mut json = String::new();
-//    file.read_to_string(&mut json)?;
-//    let hopfield_net: HopfieldNet =
-//        serde_json::from_str(&json).expect("Failed to deserialize HopfieldNet from JSON");
-//    Ok(hopfield_net)
-//}
-
 impl<const SS: usize>  HopfieldNet<SS> {
     pub fn new() -> Self {
         Self {
@@ -54,6 +45,14 @@ impl<const SS: usize>  HopfieldNet<SS> {
         Ok(())
     }
 
+    pub fn load_json(filename: &str) -> io::Result<HopfieldNet<SS>> {
+        let mut file = File::open(filename)?;
+        let mut json = String::new();
+        file.read_to_string(&mut json)?;
+        let hopfield_net: HopfieldNet<SS> = serde_json::from_str(&json)?;
+        Ok(hopfield_net)
+    }
+
     pub fn load(filename: &str) -> io::Result<HopfieldNet<SS>> {
         let mut file = File::open(filename)?;
         let mut encoded = Vec::new();
@@ -62,6 +61,7 @@ impl<const SS: usize>  HopfieldNet<SS> {
             bincode::deserialize(&encoded).expect("Failed to deserialize HopfieldNet");
         Ok(hopfield_net)
     }
+
     pub fn save_json(&self, filename: &str) -> io::Result<()> {
         let json = serde_json::to_string(self)?;
         let mut file = File::create(filename)?;
