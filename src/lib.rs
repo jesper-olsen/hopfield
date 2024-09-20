@@ -2,6 +2,7 @@ use core::fmt;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{self, Read, Write};
+pub mod mnist;
 
 #[derive(Serialize, Deserialize)]
 pub struct HopfieldNet<const SS: usize> {

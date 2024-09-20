@@ -1,29 +1,11 @@
 use std::collections::HashSet;
-pub mod hopfield;
-pub mod mnist;
+use hopfield::mnist;
 use hopfield::HopfieldNet;
 use stmc_rs::marsaglia::Marsaglia;
 
 const LLEN: usize = 10;
 const SS: usize = 8*28*28+LLEN+1;
 const DIR: &str = "MNIST/";
-
-fn state2u64(state: &[u8]) -> u64 {
-    state
-        .iter()
-        .skip(1) // bias term
-        .enumerate()
-        .fold(0, |b, (i, &x)| b | ((x as u64) << i))
-}
-
-fn u64_to_state(a: u64) -> Vec<u8> {
-    std::iter::once(1)  // bias term 1
-        .chain(
-            //(0..64).rev().map(move |i| if a & (1 << i) != 0 { 1 } else { 0 })
-            (0..64).map(move |i| if a & (1 << i) != 0 { 1 } else { 0 })
-        )
-        .collect()
-}
 
 fn image_to_state(label: &[u8], im: &[u8]) -> Vec<u8> {
     // one-hot encode intensity
@@ -86,7 +68,7 @@ fn mnist_train(nepochs: usize) {
         for (i, (im, lab)) in images.iter().zip(labels.iter()).enumerate() {
             //mnist::plot_image(im, 28,28,*lab);
             let x = image_to_state(&cb[*lab as usize], im);
-            let change = net.perceptron_conv_procedure(&x);
+            let _ = net.perceptron_conv_procedure(&x);
             if i % 100 == 0 {
                 println!("{j},{i}");
             }
@@ -100,7 +82,7 @@ fn mnist_train(nepochs: usize) {
     mnist_test(&mut net)
 }
 
-fn predict(net: &HopfieldNet<SS>, cb: &[Vec<u8>], x: &[u8]) -> usize {
+fn predict(cb: &[Vec<u8>], x: &[u8]) -> usize {
         let mut mind = LLEN + 1;
         let mut mini = 0;
         for (i, v) in cb.iter().enumerate() {
@@ -120,7 +102,6 @@ fn predict(net: &HopfieldNet<SS>, cb: &[Vec<u8>], x: &[u8]) -> usize {
 
 fn mnist_test(net: &HopfieldNet<SS>) {
     let cb = generate_one_hot_state_vectors(10, LLEN);
-    let dir = "MNIST/";
     let fname = format!("{DIR}t10k-labels.idx1-ubyte");
     let labels = mnist::read_labels(&fname).unwrap();
     println!("Read {} labels", labels.len());
@@ -130,7 +111,7 @@ fn mnist_test(net: &HopfieldNet<SS>) {
 
     let mut correct = 0;
     let mut n = 0;
-    for (i, (im, lab)) in images.iter().zip(labels.iter()).enumerate() {
+    for (_i, (im, lab)) in images.iter().zip(labels.iter()).enumerate() {
         //mnist::plot_image(im, 28,28,*lab);
         let mut x = image_to_state(&[0;10], im);
 
@@ -140,7 +121,7 @@ fn mnist_test(net: &HopfieldNet<SS>) {
         loop {
             net.step(&mut x);
             let g1 = net.goodness(&x);
-            mini = predict(net,&cb,&x);
+            mini = predict(&cb,&x);
             println!("Goodness: {g1}, lab: {lab} prediction: {mini}");
             if g1 == g0 {
                 break;
@@ -156,55 +137,12 @@ fn mnist_test(net: &HopfieldNet<SS>) {
     }
 }
 
-fn hop_font8x8() {
-    let mut net = HopfieldNet::<65>::new();
-    if true {
-        for i in 0x61..0x64 {
-            let b = font8x8::unicode2bitmap(i);
-            font8x8::display(b);
-            let v = u64_to_state(b);
-            net.hopfield_storage_rule(&v);
-        }
-    } else {
-        for _ in 0..3 {
-            for i in 0x61..0x64 {
-                let b = font8x8::unicode2bitmap(i);
-                font8x8::display(b);
-                let v = u64_to_state(b);
-                for _ in 0..10 {
-                    let change = net.perceptron_conv_procedure(&v);
-                }
-            }
-        }
-    }
-    let mask0: u64 = 0xFFFFFFFFFFFFFFFF;
-    let mask1: u64 = 0xFFFFFFFF00000000;
-    let mask2: u64 = 0x00000000FFFFFFFF;
-    for (label, mask) in [("none", mask0), ("upper", mask1), ("lower", mask2)] {
-        for i in 0x61..=0x66 {
-            let ch = char::from_u32(i as u32).unwrap();
-            println!("Initialising with {ch} - mask: {label}");
-            let b = mask & font8x8::unicode2bitmap(i);
-            font8x8::display(b);
-            let mut v = u64_to_state(b);
-            println!("Goodness: {}", net.goodness(&v));
-            for _ in 0..3 {
-                net.step(&mut v);
-                println!("Goodness: {}", net.goodness(&v));
-            }
-            let b = state2u64(&v);
-            font8x8::display(b);
-        }
-    }
-}
-
 fn main() {
-    //hop_font8x8();
-    mnist_train(3);
+    //mnist_train(3);
     //let mut hnet = hopfield::load_json("hop0.json").expect("Failed to load model");
 
-//    let fname = format!("hop_weights2.bin");
-//    let mut net = HopfieldNet::<SS>::new();
-//    net.load_weights(&fname).expect("failed to save");
-//    mnist_test(&mut net);
+    let fname = format!("hop_weights1.bin");
+    let mut net = HopfieldNet::<SS>::new();
+    net.load_weights(&fname).expect("failed to load weights");
+    mnist_test(&mut net);
 }
