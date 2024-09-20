@@ -16,12 +16,13 @@ References:
 
 ## Font8x8
 
-Run:
-----
 Train network on letters a,b,c (8x8 font = 64-bit images); recognise from initialisation a,b,c,d,e,f - repeat 3 times:
 * no mask
 * mask upper 32 bits.
 * mask lower 32 bits.
+
+Run the example:
+
 ```
 % cargo run --bin main_font8x8
 
@@ -469,6 +470,8 @@ Goodness: 455
 ```
 
 ## MNIST
+
+Run the example:
 
 ```
 % cargo run --bin main_mnist
