@@ -4,7 +4,7 @@ MNIST
 Download MNIST, e.g.
 
 ```
-% mkdir -p MNIST
+% mkdir MNIST
 % cd MNIST
 % wget http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
 % wget http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
@@ -16,7 +16,7 @@ Download MNIST, e.g.
 Run the example:
 
 ```
-% cargo run --bin main_mnist
+% cargo run --release --bin main_mnist
 ```
 
 Hopfield networks can be used for classification if we add the class label (one-hot) to the state vector. At test time the label is 'blanked out', but will
