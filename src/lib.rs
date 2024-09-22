@@ -23,12 +23,12 @@ impl<const SS: usize> fmt::Display for HopfieldNet<SS> {
         Ok(())
     }
 }
-  
-impl<const SS: usize>  HopfieldNet<SS> {
+
+impl<const SS: usize> HopfieldNet<SS> {
     pub fn new() -> Self {
         Self {
             //weights: [0;SS*(SS-1)/2],
-            weights: vec![0;SS*(SS-1)/2],
+            weights: vec![0; SS * (SS - 1) / 2],
         }
     }
 
@@ -174,8 +174,7 @@ impl<const SS: usize>  HopfieldNet<SS> {
 
     pub fn step(&self, state: &mut [u8]) {
         for i in 1..state.len() {
-            let e = 
-                state
+            let e = state
                 .iter()
                 .enumerate()
                 .map(|(j, &sj)| i32::from(sj) * self.get_weight(i, j))
@@ -191,9 +190,7 @@ impl<const SS: usize>  HopfieldNet<SS> {
     pub fn energy(&self, state: &[u8]) -> i32 {
         -(0..state.len())
             .flat_map(|j| {
-                (0..j).map(move |i| {
-                    state[i] as i32 * state[j] as i32 * self.get_weight(i, j)
-                })
+                (0..j).map(move |i| state[i] as i32 * state[j] as i32 * self.get_weight(i, j))
             })
             .sum::<i32>()
     }
@@ -219,10 +216,10 @@ mod tests {
         net.step(&mut x);
         assert_eq!(net.goodness(&x), 4);
 
-        let x = [1,0, 1, 1, 1, 0];
+        let x = [1, 0, 1, 1, 1, 0];
         assert_eq!(net.goodness(&x), 4);
 
-        let x = [1,1, 0, 0, 1, 1];
+        let x = [1, 1, 0, 0, 1, 1];
         assert_eq!(net.goodness(&x), 5);
     }
 }
