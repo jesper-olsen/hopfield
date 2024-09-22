@@ -35,6 +35,7 @@ The quantization level turns out to have little influence on accuracy - the trai
 Accuracy is ~80% - the [Forward-Forward algorithm](https://github.com/jesper-olsen/ff-py) and [Deep Boltzmann machines](https://github.com/jesper-olsen/rbm-py) achieve better than 98% on the same task - though at the cost of considerably more complexity.
 
 Here is an example image from the test set:
+
 ![PNG](https://raw.githubusercontent.com/jesper-olsen/hopfield/master/Images/7-org.png) 
 
 And the same image after being processed by the Hopfield network - 1 bit quantisation:
