@@ -88,7 +88,7 @@ fn predict(cb: &[[u8; NUM_LABELS]], x: &[u8]) -> usize {
     for (i, v) in cb.iter().enumerate() {
         let d: usize = v
             .iter()
-            .zip(&x[1..v.len()])
+            .zip(&x[1..=v.len()])
             .map(|(x, y)| if x == y { 0 } else { 1 })
             .sum();
         //println!("lab {i} d {d}");
