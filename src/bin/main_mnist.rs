@@ -47,7 +47,7 @@ const fn one_hot<const N: usize>(i: usize) -> [u8; N] {
 }
 
 fn generate_one_hot_state_vectors<const NUM_LABELS: usize>() -> [[u8; NUM_LABELS]; NUM_LABELS] {
-    let mut a = [[0; NUM_LABELSELS]; NUM_LABELS];
+    let mut a = [[0; NUM_LABELS]; NUM_LABELS];
     for i in 0..NUM_LABELS {
         a[i][i] = 1;
     }
