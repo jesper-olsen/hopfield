@@ -4,6 +4,21 @@ use std::fs::File;
 use std::io::{self, Read, Write};
 pub mod mnist;
 
+
+pub enum Spin<const Q: u8> {
+    State(u8),
+}
+
+impl<const Q: u8> Spin<Q> {
+    pub fn new(state: u8) -> Self {
+        if state >= Q {
+            panic!("Invalid spin state: {}. Valid states are 0 to {}", state, Q - 1);
+        }
+        Spin::State(state)
+    }
+}
+
+
 #[derive(Serialize, Deserialize)]
 pub struct HopfieldNet<const SS: usize> {
     //weights: [i32; SS*(SS-1)/2],
@@ -32,19 +47,6 @@ impl<const SS: usize> HopfieldNet<SS> {
         }
     }
 
-    pub fn save(&self, filename: &str) -> io::Result<()> {
-        let encoded: Vec<u8> = bincode::serialize(self).map_err(|e| {
-            io::Error::new(
-                io::ErrorKind::Other,
-                format!("Serialization error: {:?}", e),
-            )
-        })?;
-
-        let mut file = File::create(filename)?;
-        file.write_all(&encoded)?;
-        Ok(())
-    }
-
     pub fn load_json(filename: &str) -> io::Result<HopfieldNet<SS>> {
         let mut file = File::open(filename)?;
         let mut json = String::new();
@@ -53,46 +55,10 @@ impl<const SS: usize> HopfieldNet<SS> {
         Ok(hopfield_net)
     }
 
-    pub fn load(filename: &str) -> io::Result<HopfieldNet<SS>> {
-        let mut file = File::open(filename)?;
-        let mut encoded = Vec::new();
-        file.read_to_end(&mut encoded)?;
-        let hopfield_net: HopfieldNet<SS> =
-            bincode::deserialize(&encoded).expect("Failed to deserialize HopfieldNet");
-        Ok(hopfield_net)
-    }
-
     pub fn save_json(&self, filename: &str) -> io::Result<()> {
         let json = serde_json::to_string(self)?;
         let mut file = File::create(filename)?;
         file.write_all(json.as_bytes())?;
-        Ok(())
-    }
-
-    //pub fn save_weights(&self, filename: &str) -> io::Result<()> {
-    //    let encoded: Vec<u8> = bincode::serialize(&self.weights)?;
-    //    let mut file = File::create(filename)?;
-    //    file.write_all(&encoded)?;
-    //    Ok(())
-    //}
-
-    pub fn save_weights(&self, filename: &str) -> io::Result<()> {
-        let encoded: Vec<u8> = bincode::serialize(&self.weights).map_err(|e| {
-            io::Error::new(
-                io::ErrorKind::Other,
-                format!("Serialization error: {:?}", e),
-            )
-        })?;
-        let mut file = File::create(filename)?;
-        file.write_all(&encoded)?;
-        Ok(())
-    }
-
-    pub fn load_weights(&mut self, filename: &str) -> io::Result<()> {
-        let mut file = File::open(filename)?;
-        let mut encoded = Vec::new();
-        file.read_to_end(&mut encoded)?;
-        self.weights = bincode::deserialize(&encoded).expect("Failed to deserialize weights");
         Ok(())
     }
 

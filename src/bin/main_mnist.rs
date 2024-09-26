@@ -2,9 +2,8 @@ use hopfield::mnist;
 use hopfield::HopfieldNet;
 
 const NUM_LABELS: usize = 10; // Number of labels
-const Q: u8 = 8; // Quantization levels, e.g. 2, 4, 8
+const Q: u8 = 2; // Quantization levels, e.g. 2, 4, 8
 const D: u8 = (256usize / Q as usize) as u8;
-//const SS: usize = Q as usize * 28 * 28 + NUM_LABELS + 1; // state length
 const SS: usize = Q as usize * 28 * 28 + NUM_LABELS ; // state length
 const DIR: &str = "MNIST/";
 
@@ -26,7 +25,7 @@ fn image_to_state(label: &[u8], im: &[u8]) -> Vec<u8> {
 }
 
 fn state_to_image(state: &[u8], label_len: usize) -> Vec<u8> {
-    let state = &state[label_len + 1..]; // Skip bias and label
+    let state = &state[label_len..]; // Skip label
 
     state
         .chunks(Q as usize) // Each pixel is represented by D one-hot values
