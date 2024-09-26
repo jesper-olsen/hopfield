@@ -2,9 +2,10 @@ use hopfield::mnist;
 use hopfield::HopfieldNet;
 
 const NUM_LABELS: usize = 10; // Number of labels
-const Q: u8 = 2; // Quantization levels, e.g. 2, 4, 8
+const Q: u8 = 8; // Quantization levels, e.g. 2, 4, 8
 const D: u8 = (256usize / Q as usize) as u8;
-const SS: usize = Q as usize * 28 * 28 + NUM_LABELS + 1; // state length
+//const SS: usize = Q as usize * 28 * 28 + NUM_LABELS + 1; // state length
+const SS: usize = Q as usize * 28 * 28 + NUM_LABELS ; // state length
 const DIR: &str = "MNIST/";
 
 fn image_to_state(label: &[u8], im: &[u8]) -> Vec<u8> {
@@ -18,7 +19,7 @@ fn image_to_state(label: &[u8], im: &[u8]) -> Vec<u8> {
         .collect();
 
     let mut x = Vec::with_capacity(label.len() + p.len() + 1);
-    x.push(1); // bias
+    //x.push(1); // bias
     x.extend_from_slice(label);
     x.extend_from_slice(&p);
     x
@@ -88,7 +89,8 @@ fn predict(cb: &[[u8; NUM_LABELS]], x: &[u8]) -> usize {
     for (i, v) in cb.iter().enumerate() {
         let d: usize = v
             .iter()
-            .zip(&x[1..=v.len()])
+            //.zip(&x[1..=v.len()])
+            .zip(&x[0..v.len()])
             .map(|(x, y)| if x == y { 0 } else { 1 })
             .sum();
         //println!("lab {i} d {d}");

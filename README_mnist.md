@@ -28,11 +28,11 @@ The quantization level turns out to have little influence on accuracy - the trai
 
 | Quantisation      | Correct |
 |-------------------|----------|
-| 3 bits / 8 levels | 7833     |
-| 2 bits / 4 levels | 8045     |
-| 1 bit  / 2 levels | 8003     |
+| 3 bits / 8 levels | 7873     |
+| 2 bits / 4 levels | 8411     |
+| 1 bit  / 2 levels | 8282     |
 
-Accuracy is ~80% - the [Forward-Forward algorithm](https://github.com/jesper-olsen/ff-py) and [Deep Boltzmann machines](https://github.com/jesper-olsen/rbm-py) achieve better than 98% on the same task - though at the cost of considerably more complexity.
+The [Forward-Forward algorithm](https://github.com/jesper-olsen/ff-py) and [Deep Boltzmann machines](https://github.com/jesper-olsen/rbm-py) achieve better than 98% on the same task - though at the cost of considerably more complexity.
 
 Here is an example image from the test set:
 

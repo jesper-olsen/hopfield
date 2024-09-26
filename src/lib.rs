@@ -150,7 +150,7 @@ impl<const SS: usize> HopfieldNet<SS> {
         //* if incorrectly outputs one, subtract input vector from weight vector
 
         let mut change = false;
-        for i in 1..state.len() {
+        for i in 0..state.len() {
             let e = state
                 .iter()
                 .enumerate()
@@ -173,7 +173,7 @@ impl<const SS: usize> HopfieldNet<SS> {
     }
 
     pub fn step(&self, state: &mut [u8]) {
-        for i in 1..state.len() {
+        for i in 0..state.len() {
             let e = state
                 .iter()
                 .enumerate()
