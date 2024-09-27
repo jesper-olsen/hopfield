@@ -22,12 +22,12 @@ impl<const Q: u8> Spin<Q> {
 #[derive(Serialize, Deserialize)]
 pub struct HopfieldNet<const SS: usize> {
     //weights: [i32; SS*(SS-1)/2],
-    weights: Vec<i32>,
+    pub weights: Vec<i32>,
 }
 
 impl<const SS: usize> fmt::Display for HopfieldNet<SS> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "HopfieldNet (State 0 is bias)")?;
+        writeln!(f, "HopfieldNet")?;
 
         for i in 0..SS {
             for j in 0..SS {

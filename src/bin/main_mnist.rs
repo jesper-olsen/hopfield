@@ -17,8 +17,7 @@ fn image_to_state(label: &[u8], im: &[u8]) -> Vec<u8> {
         })
         .collect();
 
-    let mut x = Vec::with_capacity(label.len() + p.len() + 1);
-    //x.push(1); // bias
+    let mut x = Vec::with_capacity(label.len() + p.len());
     x.extend_from_slice(label);
     x.extend_from_slice(&p);
     x
@@ -34,8 +33,8 @@ fn state_to_image(state: &[u8], label_len: usize) -> Vec<u8> {
             bin.iter()
                 .enumerate()
                 .find(|(_, &v)| v == 1) // Find which bit is set to 1
-                .map(|(i, v)| (i as u8) * D) // Map back to intensity (0 to 255, D bins)
-                .unwrap_or(0) // Default to 0 if no bit is set (edge case)
+                .map(|(i, _v)| (i as u8) * D) // Map back to intensity (0 to 255, D bins)
+                .unwrap_or(0) 
         })
         .collect()
 }
@@ -76,10 +75,10 @@ fn mnist_train(nepochs: usize) {
                 println!("{j},{i}");
             }
         }
-        let fname = format!("hop{j}.json");
+        let fname = format!("hop{j}.txt");
         net.save_json(&fname).expect("failed to save");
     }
-    mnist_test(&cb, &mut net)
+    mnist_test(&cb, &net)
 }
 
 fn predict(cb: &[[u8; NUM_LABELS]], x: &[u8]) -> usize {
@@ -88,15 +87,31 @@ fn predict(cb: &[[u8; NUM_LABELS]], x: &[u8]) -> usize {
     for (i, v) in cb.iter().enumerate() {
         let d: usize = v
             .iter()
-            //.zip(&x[1..=v.len()])
             .zip(&x[0..v.len()])
             .map(|(x, y)| if x == y { 0 } else { 1 })
             .sum();
-        //println!("lab {i} d {d}");
         if d < mind {
             mind = d;
             mini = i;
         }
+    }
+    mini
+}
+
+// start with blank label and let the network reconstruct it as it settles in to an energy minimum
+fn classify(net: &HopfieldNet<SS>, cb: &[[u8;NUM_LABELS]], x: &mut [u8], lab: u8) -> usize {
+    let mut g0 = net.goodness(x);
+    println!("Goodness: {g0}");
+    let mut mini;
+    loop {
+        net.step(x);
+        let g1 = net.goodness(x);
+        mini = predict(cb, x);
+        println!("Goodness: {g1}, lab: {lab} prediction: {mini}");
+        if g1 == g0 {
+            break;
+        }
+        g0 = g1
     }
     mini
 }
@@ -111,26 +126,13 @@ fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &HopfieldNet<SS>) {
 
     let mut correct = 0;
     let mut n = 0;
-    for (_i, (im, lab)) in images.iter().zip(labels.iter()).enumerate() {
+    for (im, lab) in images.iter().zip(labels.iter()) {
         //mnist::plot_image(im, 28,28,*lab);
         let mut x = image_to_state(&[0; 10], im);
 
-        let mut g0 = net.goodness(&x);
-        println!("Goodness: {g0}");
-        let mut mini;
-        loop {
-            net.step(&mut x);
-            let g1 = net.goodness(&x);
-            mini = predict(&cb, &x);
-            println!("Goodness: {g1}, lab: {lab} prediction: {mini}");
-            if g1 == g0 {
-                break;
-            }
-            g0 = g1
-        }
-
+        let predicted_label=classify(net, cb, &mut x, *lab);
         n += 1;
-        if *lab as usize == mini {
+        if *lab as usize == predicted_label {
             correct += 1;
         }
         println!("correct {correct}/{n}");
@@ -145,8 +147,8 @@ fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &HopfieldNet<SS>) {
 fn main() {
     mnist_train(1);
 
-    //let fname = format!("WEIGHTS/hop0.json");
+    //let fname = format!("hop0.json");
     //let mut net = HopfieldNet::<SS>::load_json(&fname).expect("Failed to load Hopfield network");
-    //let cb = generate_one_hot_state_vectors(10, NUM_LABELS);
-    //mnist_test(&cb, &mut net);
+    //let cb = generate_one_hot_state_vectors::<NUM_LABELS>();
+    //mnist_test(&cb, &net);
 }
