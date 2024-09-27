@@ -156,7 +156,7 @@ impl<const SS: usize> HopfieldNet<SS> {
     pub fn energy(&self, state: &[u8]) -> i32 {
         -(0..state.len())
             .flat_map(|j| {
-                (0..j).map(move |i| state[i] as i32 * state[j] as i32 * self.get_weight(i, j))
+                (0..j).map(move |i| (state[i] * state[j]) as i32 * self.get_weight(i, j))
             })
             .sum::<i32>()
     }
