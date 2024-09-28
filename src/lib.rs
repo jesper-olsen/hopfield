@@ -4,21 +4,6 @@ use std::fs::File;
 use std::io::{self, Read, Write};
 pub mod mnist;
 
-
-pub enum Spin<const Q: u8> {
-    State(u8),
-}
-
-impl<const Q: u8> Spin<Q> {
-    pub fn new(state: u8) -> Self {
-        if state >= Q {
-            panic!("Invalid spin state: {}. Valid states are 0 to {}", state, Q - 1);
-        }
-        Spin::State(state)
-    }
-}
-
-
 #[derive(Serialize, Deserialize)]
 pub struct HopfieldNet<const SS: usize> {
     //weights: [i32; SS*(SS-1)/2],
@@ -91,6 +76,15 @@ impl<const SS: usize> HopfieldNet<SS> {
         }
     }
 
+    pub fn add_to_weights(&mut self, i: usize, sign: i32, state: &[u8]) {
+        for (j, &s) in state.iter().enumerate() {
+            if i != j {
+                let index = self.index(i, j);
+                self.weights[index] += sign * (s as i32);
+            }
+        }
+    }
+
     pub fn hopfield_storage_rule(&mut self, state: &[u8]) {
         // Hopfield with -1 & 1 states
         //     delta w_ij = s_i * s_j
@@ -100,7 +94,7 @@ impl<const SS: usize> HopfieldNet<SS> {
         //                = 4s_i*s_j -2s_i -2s_j + 1
         // For M memories, weights in range [-M;M]
 
-        for i in 1..state.len() {
+        for i in 0..state.len() {
             let si: i32 = state[i].into();
             for j in 0..state.len() {
                 let sj: i32 = state[j].into();
@@ -110,32 +104,23 @@ impl<const SS: usize> HopfieldNet<SS> {
         }
     }
 
-    pub fn perceptron_conv_procedure(&mut self, state: &[u8]) -> bool {
+    pub fn perceptron_conv_procedure(&mut self, state: &[u8]) {
         //* if output unit is correct do nothing
         //* if incorrectly outputs zero, add input vector to weight vector
         //* if incorrectly outputs one, subtract input vector from weight vector
 
-        let mut change = false;
         for i in 0..state.len() {
             let e = state
                 .iter()
                 .enumerate()
                 .map(|(j, &sj)| sj as i32 * self.get_weight(i, j))
                 .sum::<i32>();
-            let sign = match state[i] {
-                0 if e >= 0 => -1,
-                1 if e < 0 => 1,
-                _ => 0,
-            };
-            if sign != 0 {
-                for j in 0..state.len() {
-                    let w: i32 = state[j].into();
-                    self.update_weight(i, j, sign * w);
-                }
-                change = true;
+            match state[i] {
+                0 if e >= 0 => self.add_to_weights(i, -1, state),
+                1 if e < 0 => self.add_to_weights(i, 1, state),
+                _ => (),
             }
         }
-        change
     }
 
     pub fn step(&self, state: &mut [u8]) {
@@ -155,9 +140,7 @@ impl<const SS: usize> HopfieldNet<SS> {
 
     pub fn energy(&self, state: &[u8]) -> i32 {
         -(0..state.len())
-            .flat_map(|j| {
-                (0..j).map(move |i| (state[i] * state[j]) as i32 * self.get_weight(i, j))
-            })
+            .flat_map(|j| (0..j).map(move |i| (state[i] * state[j]) as i32 * self.get_weight(i, j)))
             .sum::<i32>()
     }
 }

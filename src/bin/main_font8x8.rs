@@ -9,7 +9,9 @@ fn state2u64(state: &[u8]) -> u64 {
 }
 
 fn u64_to_state(a: u64) -> Vec<u8> {
-    (0..64).map(move |i| if a & (1 << i) != 0 { 1 } else { 0 }).collect()
+    (0..64)
+        .map(move |i| if a & (1 << i) != 0 { 1 } else { 0 })
+        .collect()
     //std::iter::once(1) // bias term 1
     //    .chain(
     //        //(0..64).rev().map(move |i| if a & (1 << i) != 0 { 1 } else { 0 })

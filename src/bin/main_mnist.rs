@@ -4,7 +4,7 @@ use hopfield::HopfieldNet;
 const NUM_LABELS: usize = 10; // Number of labels
 const Q: u8 = 2; // Quantization levels, e.g. 2, 4, 8
 const D: u8 = (256usize / Q as usize) as u8;
-const SS: usize = Q as usize * 28 * 28 + NUM_LABELS ; // state length
+const SS: usize = Q as usize * 28 * 28 + NUM_LABELS; // state length
 const DIR: &str = "MNIST/";
 
 fn image_to_state(label: &[u8], im: &[u8]) -> Vec<u8> {
@@ -34,16 +34,16 @@ fn state_to_image(state: &[u8], label_len: usize) -> Vec<u8> {
                 .enumerate()
                 .find(|(_, &v)| v == 1) // Find which bit is set to 1
                 .map(|(i, _v)| (i as u8) * D) // Map back to intensity (0 to 255, D bins)
-                .unwrap_or(0) 
+                .unwrap_or(0)
         })
         .collect()
 }
 
-const fn one_hot<const N: usize>(i: usize) -> [u8; N] {
-    let mut a: [u8; N] = [0; N];
-    a[i] = 1;
-    a
-}
+//const fn one_hot<const N: usize>(i: usize) -> [u8; N] {
+//    let mut a: [u8; N] = [0; N];
+//    a[i] = 1;
+//    a
+//}
 
 fn generate_one_hot_state_vectors<const NUM_LABELS: usize>() -> [[u8; NUM_LABELS]; NUM_LABELS] {
     let mut a = [[0; NUM_LABELS]; NUM_LABELS];
@@ -70,7 +70,7 @@ fn mnist_train(nepochs: usize) {
         for (i, (im, lab)) in images.iter().zip(labels.iter()).enumerate() {
             //mnist::plot_image(im, 28,28,*lab);
             let x = image_to_state(&cb[*lab as usize], im);
-            let _ = net.perceptron_conv_procedure(&x);
+            net.perceptron_conv_procedure(&x);
             if i % 100 == 0 {
                 println!("{j},{i}");
             }
@@ -99,7 +99,7 @@ fn predict(cb: &[[u8; NUM_LABELS]], x: &[u8]) -> usize {
 }
 
 // start with blank label and let the network reconstruct it as it settles in to an energy minimum
-fn classify(net: &HopfieldNet<SS>, cb: &[[u8;NUM_LABELS]], x: &mut [u8], lab: u8) -> usize {
+fn classify(net: &HopfieldNet<SS>, cb: &[[u8; NUM_LABELS]], x: &mut [u8], lab: u8) -> usize {
     let mut g0 = net.goodness(x);
     println!("Goodness: {g0}");
     let mut mini;
@@ -130,7 +130,7 @@ fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &HopfieldNet<SS>) {
         //mnist::plot_image(im, 28,28,*lab);
         let mut x = image_to_state(&[0; 10], im);
 
-        let predicted_label=classify(net, cb, &mut x, *lab);
+        let predicted_label = classify(net, cb, &mut x, *lab);
         n += 1;
         if *lab as usize == predicted_label {
             correct += 1;
