@@ -1,5 +1,4 @@
-use hopfield::mnist;
-use hopfield::HopfieldNet;
+use hopfield::{cnn, mnist, HopfieldNet};
 
 const NUM_LABELS: usize = 10; // Number of labels
 const Q: u8 = 2; // Quantization levels, e.g. 2, 4, 8
