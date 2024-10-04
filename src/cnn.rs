@@ -1,15 +1,57 @@
+use core::fmt;
 use stmc_rs::mersenne::MersenneTwister64;
 
-struct Kernel<const W: usize> {
+pub struct Kernel<const W: usize> {
     w: [[i32; W]; W],
 }
 
+impl<const W: usize> fmt::Display for Kernel<W> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "CNN {W}x{W} Kernel ")?;
+
+        for i in 0..W {
+            for j in 0..W {
+                write!(f, "{:>3} ", self.w[i][j])?;
+            }
+            writeln!(f)?;
+        }
+        Ok(())
+    }
+}
+
 impl<const W: usize> Kernel<W> {
-    fn new() -> Self {
+    // random elements drawn from -1, 0, 1
+    pub fn new(seed: u64) -> Self {
+        let mut mt = MersenneTwister64::new(seed);
         let mut w = [[0i32; W]; W];
         for i in 0..W {
-            w[i][0] = 1;
-            w[i][W - 1] = -1;
+            for j in 0..W {
+                w[i][j] = (mt.genrand() % 2) as i32 - 1;
+            }
+        }
+        Kernel { w }
+    }
+
+    /// edges 1-4
+    pub fn edge(n: u8) -> Self {
+        let mut w = [[0i32; W]; W];
+        for i in 0..W {
+            match n {
+                // vertical edge
+                1 => {
+                    w[i][0] = 1;
+                    w[i][W - 1] = -1;
+                }
+                // horizontal edge
+                2 => {
+                    w[0][i] = 1;
+                    w[W - 1][i] = -1;
+                }
+                // diagonal - UL-LR
+                3 => w[i][i] = 1,
+                // diagonal - LL-UR
+                _ => w[W - i - 1][i] = 1,
+            }
         }
         Kernel { w }
     }
@@ -99,7 +141,7 @@ impl<const W: usize> Kernel<W> {
         image: &[u8],
         lr: f32,
     ) {
-        let conv_output = self.convolve::<IMAGE_WIDTH,STRIDE,PAD>(image);
+        let conv_output = self.convolve::<IMAGE_WIDTH, STRIDE, PAD>(image);
         let osize = (IMAGE_WIDTH + 2 * PAD - W) / STRIDE + 1;
 
         for y in 0..osize {
@@ -126,7 +168,7 @@ impl<const W: usize> Kernel<W> {
         const STRIDE: usize = 1;
         const PAD: usize = 0;
         for (i, image) in images.iter().enumerate() {
-            self.update::<IMAGE_WIDTH,STRIDE,PAD>(image, lr);
+            self.update::<IMAGE_WIDTH, STRIDE, PAD>(image, lr);
         }
         self.normalise(); // Optional - prevent exploding weights
     }
@@ -151,11 +193,16 @@ pub fn test_convolve() -> Vec<i32> {
     //let image: [u8; IMAGE_WIDTH * IMAGE_WIDTH] = [
     //    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
     //];
+    let image2: [[u8; IMAGE_WIDTH]; IMAGE_WIDTH] = [
+        [1, 2, 3, 4, 5],
+        [6, 7, 8, 9, 10],
+        [11, 12, 13, 14, 15],
+        [16, 17, 18, 19, 20],
+        [21, 22, 23, 24, 25],
+    ];
 
-    let kernel: [i32; KERNEL_WIDTH * KERNEL_WIDTH] = [1, 0, -1, 1, 0, -1, 1, 0, -1];
-
-    let kernel = Kernel::<3>::new();
-    let result = kernel.convolve::<IMAGE_WIDTH,STRIDE,PAD>(&image);
+    let kernel = Kernel::<3>::new(42);
+    let result = kernel.convolve::<IMAGE_WIDTH, STRIDE, PAD>(&image);
     result
     //println!("{:?}", result);
 
