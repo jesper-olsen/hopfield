@@ -56,7 +56,11 @@ impl<const W: usize> Kernel<W> {
         Kernel { w }
     }
 
-    fn convolve<const STRIDE: usize, const PAD: usize>(&self, image: &[u8], image_width: usize) -> Vec<i32> {
+    fn convolve<const STRIDE: usize, const PAD: usize>(
+        &self,
+        image: &[u8],
+        image_width: usize,
+    ) -> Vec<i32> {
         let padded_width = image_width + 2 * PAD;
         let osize: usize = (padded_width - W) / STRIDE + 1;
         let mut output = vec![0; osize * osize];
@@ -88,7 +92,12 @@ impl<const W: usize> Kernel<W> {
     }
 
     /// Hebbian update
-    fn update<const STRIDE: usize, const PAD: usize>(&mut self, image: &[u8], image_width: usize, lr: f32) {
+    fn update<const STRIDE: usize, const PAD: usize>(
+        &mut self,
+        image: &[u8],
+        image_width: usize,
+        lr: f32,
+    ) {
         let conv_output = self.convolve::<STRIDE, PAD>(image, image_width);
         let osize = (image_width + 2 * PAD - W) / STRIDE + 1;
 

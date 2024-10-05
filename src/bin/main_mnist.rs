@@ -68,7 +68,7 @@ fn mnist_train(nepochs: usize) {
     for j in 0..nepochs {
         for (i, (im, lab)) in images.iter().zip(labels.iter()).enumerate() {
             //mnist::plot_image(im, 28,28,*lab);
-            let x = image_to_state(&cb[*lab as usize], im);
+            let x = image_to_state(&cb[*lab as usize], im.as_u8_array());
             net.perceptron_conv_procedure(&x);
             if i % 100 == 0 {
                 println!("{j},{i}");
@@ -127,7 +127,7 @@ fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &HopfieldNet<SS>) {
     let mut n = 0;
     for (im, lab) in images.iter().zip(labels.iter()) {
         //mnist::plot_image(im, 28,28,*lab);
-        let mut x = image_to_state(&[0; 10], im);
+        let mut x = image_to_state(&[0; 10], im.as_u8_array());
 
         let predicted_label = classify(net, cb, &mut x, *lab);
         n += 1;
@@ -144,7 +144,7 @@ fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &HopfieldNet<SS>) {
 }
 
 fn main() {
-    //mnist::test();
+    //mnist::test().expect("Failed");
     mnist_train(1);
 
     //let fname = format!("hop0.json");
