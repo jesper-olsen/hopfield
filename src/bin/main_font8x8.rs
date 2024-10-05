@@ -36,7 +36,7 @@ fn hop_font8x8() {
                 font8x8::display(b);
                 let v = u64_to_state(b);
                 for _ in 0..10 {
-                    let _ = net.perceptron_conv_procedure(&v);
+                    net.perceptron_conv_procedure(&v);
                 }
             }
         }

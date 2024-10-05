@@ -144,6 +144,7 @@ fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &HopfieldNet<SS>) {
 }
 
 fn main() {
+    //mnist::test();
     mnist_train(1);
 
     //let fname = format!("hop0.json");

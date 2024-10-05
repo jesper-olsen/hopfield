@@ -49,36 +49,8 @@ pub fn read_images(path: &str) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
     Ok(images)
 }
 
-fn plot(image: &[[u8; 28]; 28], label: u8) {
-    let cols = image.len();
-    let rows = image[0].len();
-    let z: Vec<_> = image
-        .iter()
-        .rev()
-        .flat_map(|r| r.iter())
-        .map(|&p| p as f64)
-        .collect();
-
-    // Plot the image using a heatmap
-    let mut fg = Figure::new();
-    fg.axes2d()
-        .set_aspect_ratio(Fix(1.0))
-        .set_size(1.0, 1.0)
-        .set_x_range(Fix(0.0), Fix(cols as f64))
-        .set_y_range(Fix(0.0), Fix(rows as f64))
-        .image(
-            z.iter(),
-            rows,
-            cols,
-            Some((0.0, 0.0, cols as f64, rows as f64)),
-            &[],
-        )
-        .set_title(&format!("MNIST Label: {}", label), &[]); // Add the label as the title
-
-    fg.show().unwrap();
-}
-
-pub fn plot_image(image: &[u8], rows: usize, cols: usize, label: u8) {
+pub fn plot(image: &[u8], rows: usize, label: u8) {
+    let cols = image.len() / rows;
     let mut fg = Figure::new();
 
     let z: Vec<f64> = image
@@ -121,7 +93,7 @@ pub fn test() -> Result<(), Box<dyn Error>> {
             images[0].len()
         );
         for i in 0..5 {
-            plot_image(&images[i], 28, 28, labels[i]);
+            plot(&images[i], 28, labels[i]);
         }
     }
 
@@ -135,17 +107,6 @@ fn flatten_image(image: &[[u8; 28]; 28]) -> &[u8] {
 fn unflatten_image(image: &[u8]) -> &[[u8; 28]; 28] {
     assert_eq!(image.len(), 28 * 28);
     unsafe { &*(image.as_ptr() as *const [[u8; 28]; 28]) }
-}
-
-pub fn test_plot() {
-    let fname = format!("MNIST/train-labels.idx1-ubyte");
-    let labels = read_labels(&fname).expect("Failed to read labels");
-
-    let fname = format!("MNIST/train-images.idx3-ubyte");
-    let images = read_images(&fname).expect("Failed to read images");
-    //plot_image(&images[0], 28, 28, labels[0]);
-    let image = unflatten_image(&images[0]);
-    plot(&image, labels[0]);
 }
 
 #[cfg(test)]
