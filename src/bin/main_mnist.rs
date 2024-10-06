@@ -1,4 +1,5 @@
 use hopfield::{cnn, mnist, HopfieldNet};
+use crate::cnn::Kernel;
 
 const NUM_LABELS: usize = 10; // Number of labels
 const Q: u8 = 2; // Quantization levels, e.g. 2, 4, 8
@@ -54,9 +55,6 @@ fn generate_one_hot_state_vectors<const NUM_LABELS: usize>() -> [[u8; NUM_LABELS
 
 fn mnist_train(nepochs: usize) {
     let cb = generate_one_hot_state_vectors::<NUM_LABELS>();
-    //for (i, v) in cb.iter().enumerate() {
-    //    println!("{i}: {v:?}")
-    //}
 
     let fname = format!("{DIR}train-labels.idx1-ubyte");
     let labels = mnist::read_labels(&fname).unwrap();
@@ -64,10 +62,10 @@ fn mnist_train(nepochs: usize) {
 
     let fname = format!("{DIR}train-images.idx3-ubyte");
     let images = mnist::read_images(&fname).unwrap();
+ 
     let mut net = HopfieldNet::<SS>::new();
     for j in 0..nepochs {
         for (i, (im, lab)) in images.iter().zip(labels.iter()).enumerate() {
-            //mnist::plot_image(im, 28,28,*lab);
             let x = image_to_state(&cb[*lab as usize], im.as_u8_array());
             net.perceptron_conv_procedure(&x);
             if i % 100 == 0 {

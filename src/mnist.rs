@@ -15,13 +15,13 @@ impl Image {
         &self.pixels
     }
 
+    pub fn as_2d_array(&self) -> &[[u8; IMAGE_WIDTH]; IMAGE_HEIGHT] {
+        unsafe { &*(self.pixels.as_ptr() as *const [[u8; IMAGE_WIDTH]; IMAGE_HEIGHT]) }
+    }
+
     pub fn as_f32_array(&self) -> [f32; IMAGE_WIDTH * IMAGE_HEIGHT] {
         let r: Vec<f32> = self.pixels.iter().map(|i| (*i as f32) / 255.0).collect();
         r.try_into().expect("failed cast")
-    }
-
-    pub fn as_2d_array(&self) -> &[[u8; IMAGE_WIDTH]; IMAGE_HEIGHT] {
-        unsafe { &*(self.pixels.as_ptr() as *const [[u8; IMAGE_WIDTH]; IMAGE_HEIGHT]) }
     }
 }
 
