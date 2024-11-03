@@ -1,4 +1,4 @@
-use hopfield::HopfieldNet;
+use hopfield::hopfield::HopfieldNet;
 
 fn state2u64(state: &[u8]) -> u64 {
     state

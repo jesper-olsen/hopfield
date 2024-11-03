@@ -1,5 +1,6 @@
-use hopfield::{cnn, mnist, HopfieldNet};
 use crate::cnn::Kernel;
+use hopfield::hopfield::HopfieldNet;
+use hopfield::{cnn, mnist};
 
 const NUM_LABELS: usize = 10; // Number of labels
 const Q: u8 = 2; // Quantization levels, e.g. 2, 4, 8
@@ -62,7 +63,7 @@ fn mnist_train(nepochs: usize) {
 
     let fname = format!("{DIR}train-images.idx3-ubyte");
     let images = mnist::read_images(&fname).unwrap();
- 
+
     let mut net = HopfieldNet::<SS>::new();
     for j in 0..nepochs {
         for (i, (im, lab)) in images.iter().zip(labels.iter()).enumerate() {
