@@ -1,16 +1,25 @@
 use gnuplot::{AxesCommon, Figure, Fix};
 use std::error::Error;
 use std::fs::File;
-use std::io::{self, BufReader, ErrorKind, Read};
+use std::io::{self, BufReader, Read};
 
 const IMAGE_WIDTH: usize = 28;
 const IMAGE_HEIGHT: usize = 28;
+pub const NPIXELS: usize = IMAGE_WIDTH * IMAGE_HEIGHT;
 
 pub struct Image {
     pixels: [u8; IMAGE_WIDTH * IMAGE_HEIGHT],
 }
 
 impl Image {
+    pub fn from_f64_array(fa: &[f64; NPIXELS]) -> Image {
+        let mut pixels = [0u8; NPIXELS];
+        fa.iter()
+            .zip(pixels.iter_mut())
+            .for_each(|(f, p)| *p = (f * 255.0) as u8);
+        Image { pixels }
+    }
+
     pub fn as_u8_array(&self) -> &[u8] {
         &self.pixels
     }
@@ -21,6 +30,10 @@ impl Image {
 
     pub fn as_f32_array(&self) -> [f32; IMAGE_WIDTH * IMAGE_HEIGHT] {
         let r: Vec<f32> = self.pixels.iter().map(|i| (*i as f32) / 255.0).collect();
+        r.try_into().expect("failed cast")
+    }
+    pub fn as_f64_array(&self) -> [f64; IMAGE_WIDTH * IMAGE_HEIGHT] {
+        let r: Vec<f64> = self.pixels.iter().map(|i| (*i as f64) / 255.0).collect();
         r.try_into().expect("failed cast")
     }
 }
@@ -75,7 +88,8 @@ pub fn read_images(path: &str) -> Result<Vec<Image>, Box<dyn Error>> {
 pub fn plot(image: &Image, label: u8) {
     let mut fg = Figure::new();
 
-    let z: Vec<f64> = image.pixels
+    let z: Vec<f64> = image
+        .pixels
         .chunks(IMAGE_WIDTH) // Split into rows
         .rev()
         .flat_map(|r| r.iter())

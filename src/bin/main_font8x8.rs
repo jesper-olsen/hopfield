@@ -21,7 +21,7 @@ fn u64_to_state(a: u64) -> Vec<u8> {
 }
 
 fn hop_font8x8() {
-    let mut net = HopfieldNet::<65>::new();
+    let mut net = HopfieldNet::<64>::new();
     if true {
         for i in 0x61..0x64 {
             let b = font8x8::unicode2bitmap(i);
