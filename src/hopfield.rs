@@ -1,17 +1,15 @@
 use core::fmt;
-use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{self, Read, Write};
 
-#[derive(Serialize, Deserialize)]
-pub struct HopfieldNet<const IDIM: usize> {
+pub struct Hopfield<const IDIM: usize> {
     //weights: [i32; IDIM*(IDIM-1)/2],
     pub weights: Vec<i32>,
 }
 
-impl<const IDIM: usize> fmt::Display for HopfieldNet<IDIM> {
+impl<const IDIM: usize> fmt::Display for Hopfield<IDIM> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "HopfieldNet")?;
+        writeln!(f, "Hopfield")?;
 
         for i in 0..IDIM {
             for j in 0..IDIM {
@@ -23,7 +21,7 @@ impl<const IDIM: usize> fmt::Display for HopfieldNet<IDIM> {
     }
 }
 
-impl<const IDIM: usize> HopfieldNet<IDIM> {
+impl<const IDIM: usize> Hopfield<IDIM> {
     pub fn new() -> Self {
         Self {
             //weights: [0;IDIM*(IDIM-1)/2],
@@ -31,18 +29,35 @@ impl<const IDIM: usize> HopfieldNet<IDIM> {
         }
     }
 
-    pub fn load_json(filename: &str) -> io::Result<HopfieldNet<IDIM>> {
+    pub fn load_json(filename: &str) -> io::Result<Hopfield<IDIM>> {
         let mut file = File::open(filename)?;
-        let mut json = String::new();
-        file.read_to_string(&mut json)?;
-        let hopfield_net: HopfieldNet<IDIM> = serde_json::from_str(&json)?;
-        Ok(hopfield_net)
+        let mut json_string = String::new();
+        file.read_to_string(&mut json_string)?;
+
+        // Strip out brackets and parse as a vector of integers
+        let weights_str = json_string
+            .trim_start_matches("{\"weights\":[")
+            .trim_end_matches("]}");
+        let weights: Vec<i32> = weights_str
+            .split(',')
+            .filter_map(|s| s.trim().parse().ok())
+            .collect();
+
+        Ok(Hopfield { weights })
     }
 
     pub fn save_json(&self, filename: &str) -> io::Result<()> {
-        let json = serde_json::to_string(self)?;
+        let json_string = format!(
+            "{{\"weights\":[{}]}}",
+            self.weights
+                .iter()
+                .map(|w| w.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        );
+
         let mut file = File::create(filename)?;
-        file.write_all(json.as_bytes())?;
+        file.write_all(json_string.as_bytes())?;
         Ok(())
     }
 
@@ -149,11 +164,11 @@ impl<const IDIM: usize> HopfieldNet<IDIM> {
 
 #[cfg(test)]
 mod tests {
-    use crate::hopfield::HopfieldNet;
+    use crate::hopfield::Hopfield;
 
     #[test]
     fn h_test() {
-        let mut net = HopfieldNet::<6>::new();
+        let mut net = Hopfield::<6>::new();
         net.set_weight(1, 2, -4);
         net.set_weight(1, 4, 3);
         net.set_weight(1, 5, 3);

@@ -1,11 +1,10 @@
-use crate::cnn::Kernel;
-use hopfield::hopfield::HopfieldNet;
-use hopfield::{cnn, mnist};
+use hopfield::hopfield::Hopfield;
+use hopfield::mnist;
 
 const NUM_LABELS: usize = 10; // Number of labels
 const Q: u8 = 2; // Quantization levels, e.g. 2, 4, 8
 const D: u8 = (256usize / Q as usize) as u8;
-const SS: usize = Q as usize * 28 * 28 + NUM_LABELS; // state length
+const IDIM: usize = Q as usize * 28 * 28 + NUM_LABELS; // state length
 const DIR: &str = "MNIST/";
 
 fn image_to_state(label: &[u8], im: &[u8]) -> Vec<u8> {
@@ -64,7 +63,7 @@ fn mnist_train(nepochs: usize) {
     let fname = format!("{DIR}train-images.idx3-ubyte");
     let images = mnist::read_images(&fname).unwrap();
 
-    let mut net = HopfieldNet::<SS>::new();
+    let mut net = Hopfield::<IDIM>::new();
     for j in 0..nepochs {
         for (i, (im, lab)) in images.iter().zip(labels.iter()).enumerate() {
             let x = image_to_state(&cb[*lab as usize], im.as_u8_array());
@@ -73,7 +72,7 @@ fn mnist_train(nepochs: usize) {
                 println!("{j},{i}");
             }
         }
-        let fname = format!("hop{j}.txt");
+        let fname = format!("hop{j}.json");
         net.save_json(&fname).expect("failed to save");
     }
     mnist_test(&cb, &net)
@@ -97,7 +96,7 @@ fn predict(cb: &[[u8; NUM_LABELS]], x: &[u8]) -> usize {
 }
 
 // start with blank label and let the network reconstruct it as it settles in to an energy minimum
-fn classify(net: &HopfieldNet<SS>, cb: &[[u8; NUM_LABELS]], x: &mut [u8], lab: u8) -> usize {
+fn classify(net: &Hopfield<IDIM>, cb: &[[u8; NUM_LABELS]], x: &mut [u8], lab: u8) -> usize {
     let mut g0 = net.goodness(x);
     println!("Goodness: {g0}");
     let mut mini;
@@ -114,7 +113,7 @@ fn classify(net: &HopfieldNet<SS>, cb: &[[u8; NUM_LABELS]], x: &mut [u8], lab: u
     mini
 }
 
-fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &HopfieldNet<SS>) {
+fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &Hopfield<IDIM>) {
     let fname = format!("{DIR}t10k-labels.idx1-ubyte");
     let labels = mnist::read_labels(&fname).unwrap();
     println!("Read {} labels", labels.len());
@@ -143,11 +142,11 @@ fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &HopfieldNet<SS>) {
 }
 
 fn main() {
-    //mnist::test().expect("Failed");
+    mnist::test().expect("Failed");
     mnist_train(1);
 
-    //let fname = format!("hop0.json");
-    //let mut net = HopfieldNet::<SS>::load_json(&fname).expect("Failed to load Hopfield network");
-    //let cb = generate_one_hot_state_vectors::<NUM_LABELS>();
-    //mnist_test(&cb, &net);
+    // let fname = format!("hop0.json");
+    // let mut net = Hopfield::<IDIM>::load_json(&fname).expect("Failed to load Hopfield network");
+    // let cb = generate_one_hot_state_vectors::<NUM_LABELS>();
+    // mnist_test(&cb, &net);
 }
