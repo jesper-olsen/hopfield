@@ -154,12 +154,12 @@ impl<const IDIM: usize> Hopfield<IDIM> {
         }
     }
 
-    pub fn goodness(&self, state: &[u8]) -> i32 {
+    pub fn goodness(&self, state: &[u8; IDIM]) -> i32 {
         -self.energy(state)
     }
 
-    pub fn energy(&self, state: &[u8]) -> i32 {
-        -(0..state.len())
+    pub fn energy(&self, state: &[u8; IDIM]) -> i32 {
+        -(0..IDIM)
             .flat_map(|j| (0..j).map(move |i| (state[i] * state[j]) as i32 * self.get_weight(i, j)))
             .sum::<i32>()
     }
