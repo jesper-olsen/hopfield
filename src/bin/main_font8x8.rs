@@ -8,16 +8,12 @@ fn state2u64(state: &[u8]) -> u64 {
         .fold(0, |b, (i, &x)| b | ((x as u64) << i))
 }
 
-fn u64_to_state(a: u64) -> Vec<u8> {
-    (0..64)
-        .map(move |i| if a & (1 << i) != 0 { 1 } else { 0 })
-        .collect()
-    //std::iter::once(1) // bias term 1
-    //    .chain(
-    //        //(0..64).rev().map(move |i| if a & (1 << i) != 0 { 1 } else { 0 })
-    //        (0..64).map(move |i| if a & (1 << i) != 0 { 1 } else { 0 }),
-    //    )
-    //    .collect()
+fn u64_to_state(u: u64) -> [u8; 64] {
+    let mut a: [u8; 64] = [0; 64];
+    a.iter_mut()
+        .enumerate()
+        .for_each(|(i, e)| *e = if u & (1 << i) != 0 { 1 } else { 0 });
+    a
 }
 
 fn hop_font8x8() {

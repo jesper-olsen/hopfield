@@ -7,7 +7,7 @@ const D: u8 = (256usize / Q as usize) as u8;
 const IDIM: usize = Q as usize * 28 * 28 + NUM_LABELS; // state length
 const DIR: &str = "MNIST/";
 
-fn image_to_state(label: &[u8], im: &[u8]) -> Vec<u8> {
+fn image_to_state(label: &[u8], im: &[u8]) -> [u8; IDIM] {
     // one-hot encode intensity
     let p: Vec<u8> = im
         .iter()
@@ -17,9 +17,9 @@ fn image_to_state(label: &[u8], im: &[u8]) -> Vec<u8> {
         })
         .collect();
 
-    let mut x = Vec::with_capacity(label.len() + p.len());
-    x.extend_from_slice(label);
-    x.extend_from_slice(&p);
+    let mut x: [u8; IDIM] = [0; IDIM];
+    x[0..label.len()].copy_from_slice(label);
+    x[label.len()..].copy_from_slice(&p);
     x
 }
 
@@ -39,18 +39,12 @@ fn state_to_image(state: &[u8], label_len: usize) -> Vec<u8> {
         .collect()
 }
 
-//const fn one_hot<const N: usize>(i: usize) -> [u8; N] {
-//    let mut a: [u8; N] = [0; N];
-//    a[i] = 1;
-//    a
-//}
-
 fn generate_one_hot_state_vectors<const NUM_LABELS: usize>() -> [[u8; NUM_LABELS]; NUM_LABELS] {
-    let mut a = [[0; NUM_LABELS]; NUM_LABELS];
-    for i in 0..NUM_LABELS {
-        a[i][i] = 1;
-    }
-    a
+    std::array::from_fn(|i| {
+        let mut row = [0; NUM_LABELS];
+        row[i] = 1;
+        row
+    })
 }
 
 fn mnist_train(nepochs: usize) {
@@ -96,7 +90,7 @@ fn predict(cb: &[[u8; NUM_LABELS]], x: &[u8]) -> usize {
 }
 
 // start with blank label and let the network reconstruct it as it settles in to an energy minimum
-fn classify(net: &Hopfield<IDIM>, cb: &[[u8; NUM_LABELS]], x: &mut [u8], lab: u8) -> usize {
+fn classify(net: &Hopfield<IDIM>, cb: &[[u8; NUM_LABELS]], x: &mut [u8; IDIM], lab: u8) -> usize {
     let mut g0 = net.goodness(x);
     println!("Goodness: {g0}");
     let mut mini;
@@ -142,7 +136,7 @@ fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &Hopfield<IDIM>) {
 }
 
 fn main() {
-    mnist::test().expect("Failed");
+    //mnist::test().expect("Failed");
     mnist_train(1);
 
     // let fname = format!("hop0.json");

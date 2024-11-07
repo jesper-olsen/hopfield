@@ -7,6 +7,12 @@ pub struct Hopfield<const IDIM: usize> {
     pub weights: Vec<i32>,
 }
 
+impl<const IDIM: usize> Default for Hopfield<IDIM> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<const IDIM: usize> fmt::Display for Hopfield<IDIM> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Hopfield")?;
@@ -90,7 +96,7 @@ impl<const IDIM: usize> Hopfield<IDIM> {
         }
     }
 
-    pub fn add_to_weights(&mut self, i: usize, sign: i32, state: &[u8]) {
+    pub fn add_to_weights(&mut self, i: usize, sign: i32, state: &[u8; IDIM]) {
         for (j, &s) in state.iter().enumerate() {
             if i != j {
                 let index = self.index(i, j);
@@ -99,7 +105,7 @@ impl<const IDIM: usize> Hopfield<IDIM> {
         }
     }
 
-    pub fn hopfield_storage_rule(&mut self, state: &[u8]) {
+    pub fn hopfield_storage_rule(&mut self, state: &[u8; IDIM]) {
         // Hopfield with -1 & 1 states
         //     delta w_ij = s_i * s_j
         // Hopfield with 0 & 1 states
@@ -108,23 +114,21 @@ impl<const IDIM: usize> Hopfield<IDIM> {
         //                = 4s_i*s_j -2s_i -2s_j + 1
         // For M memories, weights in range [-M;M]
 
-        debug_assert_eq!(state.len(), IDIM, "Expected state length to be IDIM");
         for i in 0..IDIM {
-            let si: i32 = state[i].into();
+            let si: i32 = state[i] as i32;
             for j in 0..IDIM {
-                let sj: i32 = state[j].into();
+                let sj: i32 = state[j] as i32;
                 let dw: i32 = 4 * si * sj - 2 * si - 2 * sj + 1;
                 self.update_weight(i, j, dw)
             }
         }
     }
 
-    pub fn perceptron_conv_procedure(&mut self, state: &[u8]) {
+    pub fn perceptron_conv_procedure(&mut self, state: &[u8; IDIM]) {
         //* if output unit is correct do nothing
         //* if incorrectly outputs zero, add input vector to weight vector
         //* if incorrectly outputs one, subtract input vector from weight vector
 
-        debug_assert_eq!(state.len(), IDIM, "Expected state length to be IDIM");
         for i in 0..IDIM {
             let e = state
                 .iter()
@@ -139,8 +143,7 @@ impl<const IDIM: usize> Hopfield<IDIM> {
         }
     }
 
-    pub fn step(&self, state: &mut [u8]) {
-        debug_assert_eq!(state.len(), IDIM, "Expected state length to be IDIM");
+    pub fn step(&self, state: &mut [u8; IDIM]) {
         for i in 0..IDIM {
             let e = state
                 .iter()
@@ -168,7 +171,7 @@ mod tests {
 
     #[test]
     fn h_test() {
-        let mut net = Hopfield::<6>::new();
+        let mut net = Hopfield::<6>::default();
         net.set_weight(1, 2, -4);
         net.set_weight(1, 4, 3);
         net.set_weight(1, 5, 3);
