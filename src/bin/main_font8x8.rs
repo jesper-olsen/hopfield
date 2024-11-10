@@ -26,10 +26,12 @@ fn hop_font8x8() {
             net.hopfield_storage_rule(&v);
         }
     } else {
-        for _ in 0..3 {
+        for ep in 0..3 {
             for i in 0x61..0x64 {
                 let b = font8x8::unicode2bitmap(i);
-                font8x8::display(b);
+                if ep == 0 {
+                    font8x8::display(b);
+                }
                 let v = u64_to_state(b);
                 for _ in 0..10 {
                     net.perceptron_conv_procedure(&v);

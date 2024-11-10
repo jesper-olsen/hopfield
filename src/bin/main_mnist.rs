@@ -117,16 +117,15 @@ fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &Hopfield<IDIM>) {
 
     let mut correct = 0;
     let mut n = 0;
-    for (im, lab) in images.iter().zip(labels.iter()) {
+    for (n, (im, lab)) in images.iter().zip(labels.iter()).enumerate() {
         //mnist::plot_image(im, 28,28,*lab);
         let mut x = image_to_state(&[0; 10], im.as_u8_array());
 
         let predicted_label = classify(net, cb, &mut x, *lab);
-        n += 1;
         if *lab as usize == predicted_label {
             correct += 1;
         }
-        println!("correct {correct}/{n}");
+        println!("correct {correct}/{total}", total = n + 1);
 
         //let imp=state_to_image(&x, 10);
         //println!("im len: {}, imp len: {} x len {}", im.len(), imp.len(), x.len());

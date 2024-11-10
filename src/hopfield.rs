@@ -170,6 +170,21 @@ mod tests {
     use crate::hopfield::Hopfield;
 
     #[test]
+    fn index_test() {
+        let mut net = Hopfield::<6>::default();
+        let mut n = 0;
+        for i in 0..6 {
+            for j in 0..6 {
+                if i < j {
+                    let index = net.index(i, j);
+                    assert_eq!(index, n);
+                    n += 1;
+                }
+            }
+        }
+    }
+
+    #[test]
     fn h_test() {
         let mut net = Hopfield::<6>::default();
         net.set_weight(1, 2, -4);
