@@ -1,16 +1,15 @@
 [package]
 name = "hopfield"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
+clap = { version = "4.5.48", features = ["derive"] }
+env_logger = "0.11.8"
 font8x8 = { git = "https://github.com/jesper-olsen/font8x8-rs", branch = "master" }
-gnuplot = "0.0.43"
-serde = { version = "1.0.210", features = ["derive"] }
-
-clap = { version = "4.5.20", features = ["derive"] }
-log = "0.4.22"
-env_logger = "0.11.5"
+gnuplot = "0.0.46"
+log = "0.4.28"
+serde = { version = "1.0.226", features = ["derive"] }
 
 [lib]
 name = "hopfield"

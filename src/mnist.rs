@@ -153,10 +153,10 @@ mod tests {
     fn m_test() {
         let dir = "MNIST/";
         for s in ["train", "t10k"] {
-            let fname = format!("{dir}{s}-labels.idx1-ubyte");
+            let fname = format!("{dir}{s}-labels-idx1-ubyte");
             let labels = read_labels(&fname).expect("Failed to read labels");
 
-            let fname = format!("{dir}{s}-images.idx3-ubyte");
+            let fname = format!("{dir}{s}-images-idx3-ubyte");
             let images = read_images(&fname).expect("Failed to read images");
             assert_eq!(images[0].pixels.len(), 784);
             if s == "train" {

@@ -32,7 +32,7 @@ fn state_to_image(state: &[u8], label_len: usize) -> Vec<u8> {
             // Decode the one-hot encoding back into intensity
             bin.iter()
                 .enumerate()
-                .find(|(_, &v)| v == 1) // Find which bit is set to 1
+                .find(|&(_, &v)| v == 1) // Find which bit is set to 1
                 .map(|(i, _v)| (i as u8) * D) // Map back to intensity (0 to 255, D bins)
                 .unwrap_or(0)
         })
@@ -50,11 +50,11 @@ fn generate_one_hot_state_vectors<const NUM_LABELS: usize>() -> [[u8; NUM_LABELS
 fn mnist_train(nepochs: usize) {
     let cb = generate_one_hot_state_vectors::<NUM_LABELS>();
 
-    let fname = format!("{DIR}train-labels.idx1-ubyte");
+    let fname = format!("{DIR}train-labels-idx1-ubyte");
     let labels = mnist::read_labels(&fname).unwrap();
     println!("Read {} labels", labels.len());
 
-    let fname = format!("{DIR}train-images.idx3-ubyte");
+    let fname = format!("{DIR}train-images-idx3-ubyte");
     let images = mnist::read_images(&fname).unwrap();
 
     let mut net = Hopfield::<IDIM>::new();
@@ -108,15 +108,14 @@ fn classify(net: &Hopfield<IDIM>, cb: &[[u8; NUM_LABELS]], x: &mut [u8; IDIM], l
 }
 
 fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &Hopfield<IDIM>) {
-    let fname = format!("{DIR}t10k-labels.idx1-ubyte");
+    let fname = format!("{DIR}t10k-labels-idx1-ubyte");
     let labels = mnist::read_labels(&fname).unwrap();
     println!("Read {} labels", labels.len());
 
-    let fname = format!("{DIR}t10k-images.idx3-ubyte");
+    let fname = format!("{DIR}t10k-images-idx3-ubyte");
     let images = mnist::read_images(&fname).unwrap();
 
     let mut correct = 0;
-    let mut n = 0;
     for (n, (im, lab)) in images.iter().zip(labels.iter()).enumerate() {
         //mnist::plot_image(im, 28,28,*lab);
         let mut x = image_to_state(&[0; 10], im.as_u8_array());

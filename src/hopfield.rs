@@ -49,6 +49,14 @@ impl<const IDIM: usize> Hopfield<IDIM> {
             .filter_map(|s| s.trim().parse().ok())
             .collect();
 
+        let expected_len = IDIM * (IDIM - 1) / 2;
+        if weights.len() != expected_len {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Invalid number of weights. Expected {expected_len}, found {}", weights.len())
+            ));
+        }
+
         Ok(Hopfield { weights })
     }
 
@@ -144,6 +152,10 @@ impl<const IDIM: usize> Hopfield<IDIM> {
     }
 
     pub fn step(&self, state: &mut [u8; IDIM]) {
+        self.step_asynchronous(state)
+    }
+
+    pub fn step_asynchronous(&self, state: &mut [u8; IDIM]) {
         for i in 0..IDIM {
             let e = state
                 .iter()
@@ -152,6 +164,20 @@ impl<const IDIM: usize> Hopfield<IDIM> {
                 .sum::<i32>();
             state[i] = if e < 0 { 0 } else { 1 };
         }
+    }
+
+    pub fn step_synchronous(&self, state: &mut [u8; IDIM]) {
+        let mut new_state = [0; IDIM]; 
+        for i in 0..IDIM {
+            // Calculate activation based on the *original* state
+            let e = state
+                .iter()
+                .enumerate()
+                .map(|(j, &sj)| i32::from(sj) * self.get_weight(i, j))
+                .sum::<i32>();
+            new_state[i] = if e < 0 { 0 } else { 1 };
+        }
+        *state = new_state;
     }
 
     pub fn goodness(&self, state: &[u8; IDIM]) -> i32 {
@@ -171,7 +197,7 @@ mod tests {
 
     #[test]
     fn index_test() {
-        let mut net = Hopfield::<6>::default();
+        let net = Hopfield::<6>::default();
         let mut n = 0;
         for i in 0..6 {
             for j in 0..6 {
@@ -197,7 +223,7 @@ mod tests {
 
         let mut x = [1, 0, 1, 1, 0, 0];
         assert_eq!(net.goodness(&x), 3);
-        net.step(&mut x);
+        net.step_asynchronous(&mut x);
         assert_eq!(net.goodness(&x), 4);
 
         let x = [1, 0, 1, 1, 1, 0];
