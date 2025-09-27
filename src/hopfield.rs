@@ -53,7 +53,10 @@ impl<const IDIM: usize> Hopfield<IDIM> {
         if weights.len() != expected_len {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
-                format!("Invalid number of weights. Expected {expected_len}, found {}", weights.len())
+                format!(
+                    "Invalid number of weights. Expected {expected_len}, found {}",
+                    weights.len()
+                ),
             ));
         }
 
@@ -167,7 +170,7 @@ impl<const IDIM: usize> Hopfield<IDIM> {
     }
 
     pub fn step_synchronous(&self, state: &mut [u8; IDIM]) {
-        let mut new_state = [0; IDIM]; 
+        let mut new_state = [0; IDIM];
         for i in 0..IDIM {
             // Calculate activation based on the *original* state
             let e = state

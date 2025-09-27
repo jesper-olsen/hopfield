@@ -10,6 +10,7 @@ font8x8 = { git = "https://github.com/jesper-olsen/font8x8-rs", branch = "master
 gnuplot = "0.0.46"
 log = "0.4.28"
 serde = { version = "1.0.226", features = ["derive"] }
+mnist = { git = "https://github.com/jesper-olsen/mnist-rs.git" }
 
 [lib]
 name = "hopfield"

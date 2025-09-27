@@ -1,11 +1,11 @@
 use hopfield::hopfield::Hopfield;
-use hopfield::mnist;
+use mnist;
+use std::path::PathBuf;
 
 const NUM_LABELS: usize = 10; // Number of labels
 const Q: u8 = 2; // Quantization levels, e.g. 2, 4, 8
 const D: u8 = (256usize / Q as usize) as u8;
 const IDIM: usize = Q as usize * 28 * 28 + NUM_LABELS; // state length
-const DIR: &str = "MNIST/";
 
 fn image_to_state(label: &[u8], im: &[u8]) -> [u8; IDIM] {
     // one-hot encode intensity
@@ -50,11 +50,12 @@ fn generate_one_hot_state_vectors<const NUM_LABELS: usize>() -> [[u8; NUM_LABELS
 fn mnist_train(nepochs: usize) {
     let cb = generate_one_hot_state_vectors::<NUM_LABELS>();
 
-    let fname = format!("{DIR}train-labels-idx1-ubyte");
+    let dir: PathBuf = PathBuf::from("MNIST/");
+    let fname = dir.join("train-labels-idx1-ubyte");
     let labels = mnist::read_labels(&fname).unwrap();
     println!("Read {} labels", labels.len());
 
-    let fname = format!("{DIR}train-images-idx3-ubyte");
+    let fname = dir.join("train-images-idx3-ubyte");
     let images = mnist::read_images(&fname).unwrap();
 
     let mut net = Hopfield::<IDIM>::new();
@@ -108,11 +109,12 @@ fn classify(net: &Hopfield<IDIM>, cb: &[[u8; NUM_LABELS]], x: &mut [u8; IDIM], l
 }
 
 fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &Hopfield<IDIM>) {
-    let fname = format!("{DIR}t10k-labels-idx1-ubyte");
+    let dir: PathBuf = PathBuf::from("MNIST/");
+    let fname = dir.join("t10k-labels-idx1-ubyte");
     let labels = mnist::read_labels(&fname).unwrap();
     println!("Read {} labels", labels.len());
 
-    let fname = format!("{DIR}t10k-images-idx3-ubyte");
+    let fname = dir.join("t10k-images-idx3-ubyte");
     let images = mnist::read_images(&fname).unwrap();
 
     let mut correct = 0;
