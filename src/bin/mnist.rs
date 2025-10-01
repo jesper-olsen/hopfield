@@ -1,13 +1,14 @@
 use hopfield::hopfield::Hopfield;
-use mnist;
+use hopfield::state::State;
 use std::path::PathBuf;
+use std::io::{self,Write};
 
 const NUM_LABELS: usize = 10; // Number of labels
 const Q: u8 = 2; // Quantization levels, e.g. 2, 4, 8
 const D: u8 = (256usize / Q as usize) as u8;
 const IDIM: usize = Q as usize * 28 * 28 + NUM_LABELS; // state length
 
-fn image_to_state(label: &[u8], im: &[u8]) -> [u8; IDIM] {
+fn image_to_state(label: &[u8], im: &[u8]) -> State<IDIM> {
     // one-hot encode intensity
     let p: Vec<u8> = im
         .iter()
@@ -20,23 +21,7 @@ fn image_to_state(label: &[u8], im: &[u8]) -> [u8; IDIM] {
     let mut x: [u8; IDIM] = [0; IDIM];
     x[0..label.len()].copy_from_slice(label);
     x[label.len()..].copy_from_slice(&p);
-    x
-}
-
-fn state_to_image(state: &[u8], label_len: usize) -> Vec<u8> {
-    let state = &state[label_len..]; // Skip label
-
-    state
-        .chunks(Q as usize) // Each pixel is represented by D one-hot values
-        .map(|bin| {
-            // Decode the one-hot encoding back into intensity
-            bin.iter()
-                .enumerate()
-                .find(|&(_, &v)| v == 1) // Find which bit is set to 1
-                .map(|(i, _v)| (i as u8) * D) // Map back to intensity (0 to 255, D bins)
-                .unwrap_or(0)
-        })
-        .collect()
+    State::from_bool_slice(&x)
 }
 
 fn generate_one_hot_state_vectors<const NUM_LABELS: usize>() -> [[u8; NUM_LABELS]; NUM_LABELS] {
@@ -64,7 +49,8 @@ fn mnist_train(nepochs: usize) {
             let x = image_to_state(&cb[*lab as usize], im.as_u8_array());
             net.perceptron_conv_procedure(&x);
             if i % 100 == 0 {
-                println!("{j},{i}");
+                print!("Epoch {j}, Image {i:5}    \r");
+                let _ = io::stdout().flush();
             }
         }
         let fname = format!("hop{j}.json");
@@ -73,15 +59,16 @@ fn mnist_train(nepochs: usize) {
     mnist_test(&cb, &net)
 }
 
-fn predict(cb: &[[u8; NUM_LABELS]], x: &[u8]) -> usize {
+fn predict(cb: &[[u8; NUM_LABELS]], x: &State<IDIM>) -> usize {
     let mut mind = NUM_LABELS + 1;
-    let mut mini = 0;
+    let mut mini = 0usize;
     for (i, v) in cb.iter().enumerate() {
-        let d: usize = v
-            .iter()
-            .zip(&x[0..v.len()])
-            .map(|(x, y)| if x == y { 0 } else { 1 })
-            .sum();
+        let mut d = 0usize;
+        for j in 0..v.len() {
+            if v[j]!=x.get(j) {
+                d+=1;
+            }
+        }
         if d < mind {
             mind = d;
             mini = i;
@@ -91,7 +78,7 @@ fn predict(cb: &[[u8; NUM_LABELS]], x: &[u8]) -> usize {
 }
 
 // start with blank label and let the network reconstruct it as it settles in to an energy minimum
-fn classify(net: &Hopfield<IDIM>, cb: &[[u8; NUM_LABELS]], x: &mut [u8; IDIM], lab: u8) -> usize {
+fn classify(net: &Hopfield<IDIM>, cb: &[[u8; NUM_LABELS]], x: &mut State<IDIM>, lab: u8) -> usize {
     let mut g0 = net.goodness(x);
     println!("Goodness: {g0}");
     let mut mini;
@@ -125,6 +112,8 @@ fn mnist_test(cb: &[[u8; NUM_LABELS]], net: &Hopfield<IDIM>) {
         let predicted_label = classify(net, cb, &mut x, *lab);
         if *lab as usize == predicted_label {
             correct += 1;
+        } else {
+            println!("{im}");
         }
         println!("correct {correct}/{total}", total = n + 1);
 

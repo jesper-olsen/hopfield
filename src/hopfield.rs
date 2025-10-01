@@ -1,6 +1,7 @@
 use core::fmt;
 use std::fs::File;
 use std::io::{self, Read, Write};
+use crate::state::State;
 
 pub struct Hopfield<const IDIM: usize> {
     //weights: [i32; IDIM*(IDIM-1)/2],
@@ -107,16 +108,17 @@ impl<const IDIM: usize> Hopfield<IDIM> {
         }
     }
 
-    pub fn add_to_weights(&mut self, i: usize, sign: i32, state: &[u8; IDIM]) {
-        for (j, &s) in state.iter().enumerate() {
+    pub fn add_to_weights(&mut self, i: usize, sign: i32, state: &State<IDIM>) {
+        for j in 0..IDIM {
+            let sj = i32::from(state.get(j)) as i32;
             if i != j {
                 let index = self.index(i, j);
-                self.weights[index] += sign * (s as i32);
+                self.weights[index] += sign * sj;
             }
         }
     }
 
-    pub fn hopfield_storage_rule(&mut self, state: &[u8; IDIM]) {
+    pub fn hopfield_storage_rule(&mut self, state: &State<IDIM>) {
         // Hopfield with -1 & 1 states
         //     delta w_ij = s_i * s_j
         // Hopfield with 0 & 1 states
@@ -126,27 +128,26 @@ impl<const IDIM: usize> Hopfield<IDIM> {
         // For M memories, weights in range [-M;M]
 
         for i in 0..IDIM {
-            let si: i32 = state[i] as i32;
+            let si =i32::from(state.get(i));
             for j in 0..IDIM {
-                let sj: i32 = state[j] as i32;
+                let sj: i32 = i32::from(state.get(j));
                 let dw: i32 = 4 * si * sj - 2 * si - 2 * sj + 1;
                 self.update_weight(i, j, dw)
             }
         }
     }
 
-    pub fn perceptron_conv_procedure(&mut self, state: &[u8; IDIM]) {
+    pub fn perceptron_conv_procedure(&mut self, state: &State<IDIM>) {
         //* if output unit is correct do nothing
         //* if incorrectly outputs zero, add input vector to weight vector
         //* if incorrectly outputs one, subtract input vector from weight vector
 
         for i in 0..IDIM {
-            let e = state
-                .iter()
-                .enumerate()
-                .map(|(j, &sj)| sj as i32 * self.get_weight(i, j))
-                .sum::<i32>();
-            match state[i] {
+            let mut e = 0i32;
+            for j in 0..IDIM {
+                e+= i32::from(state.get(j)) * self.get_weight(i,j);
+            }
+            match state.get(i) {
                 0 if e >= 0 => self.add_to_weights(i, -1, state),
                 1 if e < 0 => self.add_to_weights(i, 1, state),
                 _ => (),
@@ -154,49 +155,57 @@ impl<const IDIM: usize> Hopfield<IDIM> {
         }
     }
 
-    pub fn step(&self, state: &mut [u8; IDIM]) {
+    pub fn step(&self, state: &mut State<IDIM>) {
         self.step_asynchronous(state)
     }
 
-    pub fn step_asynchronous(&self, state: &mut [u8; IDIM]) {
+    pub fn step_asynchronous(&self, state: &mut State<IDIM>) {
         for i in 0..IDIM {
-            let e = state
-                .iter()
-                .enumerate()
-                .map(|(j, &sj)| i32::from(sj) * self.get_weight(i, j))
-                .sum::<i32>();
-            state[i] = if e < 0 { 0 } else { 1 };
+            let mut e = 0i32;
+            for j in 0..IDIM {
+                let sj = state.get(j);
+                e += i32::from(sj) * self.get_weight(i,j);
+            }
+            state.set(i,if e < 0 { 0 } else { 1 });
         }
     }
 
-    pub fn step_synchronous(&self, state: &mut [u8; IDIM]) {
-        let mut new_state = [0; IDIM];
+    pub fn step_synchronous(&self, state: &mut State<IDIM>) {
+        let mut new_state = State::<IDIM>::new();
         for i in 0..IDIM {
             // Calculate activation based on the *original* state
-            let e = state
-                .iter()
-                .enumerate()
-                .map(|(j, &sj)| i32::from(sj) * self.get_weight(i, j))
-                .sum::<i32>();
-            new_state[i] = if e < 0 { 0 } else { 1 };
+            let mut e = 0i32;
+            for j in 0..IDIM {
+                let sj = state.get(j);
+                e += i32::from(sj) * self.get_weight(i,j);
+            }
+            new_state.set(i,if e < 0 { 0 } else { 1 });
         }
         *state = new_state;
     }
 
-    pub fn goodness(&self, state: &[u8; IDIM]) -> i32 {
+    pub fn goodness(&self, state: &State<IDIM>) -> i32 {
         -self.energy(state)
     }
 
-    pub fn energy(&self, state: &[u8; IDIM]) -> i32 {
-        -(0..IDIM)
-            .flat_map(|j| (0..j).map(move |i| (state[i] * state[j]) as i32 * self.get_weight(i, j)))
-            .sum::<i32>()
+    pub fn energy(&self, state: &State<IDIM>) -> i32 {
+        let mut e=0i32;
+        for j in 0..IDIM {
+            for i in 0..j {
+                e+=(state.get(i)*state.get(j)) as i32 * self.get_weight(i,j)
+            }
+        }
+        -e
+        //-(0..IDIM)
+        //    .flat_map(|j| (0..j).map(move |i| (state[i] * state[j]) as i32 * self.get_weight(i, j)))
+        //    .sum::<i32>()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::hopfield::Hopfield;
+    use crate::state::State;
 
     #[test]
     fn index_test() {
@@ -224,15 +233,15 @@ mod tests {
         net.set_weight(3, 4, -1);
         net.set_weight(4, 5, -1);
 
-        let mut x = [1, 0, 1, 1, 0, 0];
+        let mut x = State::from_bool_slice(&[1, 0, 1, 1, 0, 0]);
         assert_eq!(net.goodness(&x), 3);
         net.step_asynchronous(&mut x);
         assert_eq!(net.goodness(&x), 4);
 
-        let x = [1, 0, 1, 1, 1, 0];
+        let x = State::from_bool_slice(&[1, 0, 1, 1, 1, 0]);
         assert_eq!(net.goodness(&x), 4);
 
-        let x = [1, 1, 0, 0, 1, 1];
+        let x = State::from_bool_slice(&[1, 1, 0, 0, 1, 1]);
         assert_eq!(net.goodness(&x), 5);
     }
 }

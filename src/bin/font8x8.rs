@@ -1,19 +1,21 @@
 use hopfield::hopfield::Hopfield;
+use hopfield::state::State;
 
-fn state2u64(state: &[u8]) -> u64 {
-    state
-        .iter()
-        //.skip(1) // bias term
-        .enumerate()
-        .fold(0, |b, (i, &x)| b | ((x as u64) << i))
+fn state2u64(state: &State<64>) -> u64 {
+    state.bits[0]
+    //state
+    //    .iter()
+    //    //.skip(1) // bias term
+    //    .enumerate()
+    //    .fold(0, |b, (i, &x)| b | ((x as u64) << i))
 }
 
-fn u64_to_state(u: u64) -> [u8; 64] {
+fn u64_to_state(u: u64) -> State<64> {
     let mut a: [u8; 64] = [0; 64];
     a.iter_mut()
         .enumerate()
         .for_each(|(i, e)| *e = if u & (1 << i) != 0 { 1 } else { 0 });
-    a
+    State::<64>::from_bool_slice(&a)
 }
 
 fn hop_font8x8() {

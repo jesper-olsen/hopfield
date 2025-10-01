@@ -9,7 +9,7 @@ Train network on letters a,b,c (8x8 font = 64-bit images); recognise from initia
 Run the example:
 
 ```
-% cargo run --bin main_font8x8
+% cargo run --bin font8x8
 
 
 ```

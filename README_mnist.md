@@ -16,7 +16,7 @@ Download MNIST, e.g.
 Run the example:
 
 ```
-% cargo run --release --bin main_mnist
+% cargo run --release --bin mnist
 ```
 
 Hopfield networks can be used for classification if we add the class label (one-hot) to the state vector. At test time the label is 'blanked out', but will
