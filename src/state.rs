@@ -30,67 +30,85 @@ impl<const IDIM: usize> State<IDIM> {
         state
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> Self {
-        // This ensures bit 0 is always the LSB of the first byte,
-        // regardless of the host system's endianness
-        let bytes_needed = (IDIM + 7) / 8;
-        assert!(bytes.len() >= bytes_needed, "Not enough bits in byte slice");
-        
-        let num_words = (IDIM + 63) / 64;
-        let mut bits = vec![0u64; num_words];
-        
-        // Always interpret as little-endian for consistent bit ordering
-        for i in 0..num_words {
-            let start = i * 8;
-            let end = ((i + 1) * 8).min(bytes_needed);
-            let mut word_bytes = [0u8; 8];
-            word_bytes[..(end - start)].copy_from_slice(&bytes[start..end]);
-            bits[i] = u64::from_le_bytes(word_bytes);
-        }
-        
-        // Clear extra bits
-        if IDIM % 64 != 0 {
-            let last_word_bits = IDIM % 64;
-            let mask = (1u64 << last_word_bits) - 1;
-            bits[num_words - 1] &= mask;
-        }
-        
-        State { bits }
-    }
-
-    /// Creates a State from any number of byte slices.
-    pub fn from_slices<'a>(slices: &[&'a [u8]]) -> Self {
-        let bytes_needed = (IDIM + 7) / 8;
-        let total_len: usize = slices.iter().map(|s| s.len()).sum();
-        assert!(total_len >= bytes_needed, "Not enough bits in byte slices");
-
+    /// Creates a State from any iterator that yields bytes.
+    pub fn from_byte_iter<I>(mut byte_iter: I) -> Self
+    where
+        I: Iterator<Item = u8>,
+    {
         let num_words = (IDIM + 63) / 64;
         let mut bits = vec![0u64; num_words];
 
-        let mut byte_iter = slices.iter().flat_map(|slice| slice.iter());
-
-        for i in 0..num_words {
+        for word in bits.iter_mut() {
             let mut word_bytes = [0u8; 8];
             
-            // Pull bytes from the iterator to fill the 8-byte buffer.
+            // Pull bytes from the generic iterator to fill the buffer
             for byte_in_word in word_bytes.iter_mut() {
-                let Some(&byte) = byte_iter.next() else {
-                    break;
-                };
-                *byte_in_word = byte;
+                if let Some(byte) = byte_iter.next() {
+                    *byte_in_word = byte;
+                } else {
+                    break; // Iterator is exhausted
+                }
             }
             
-            bits[i] = u64::from_le_bytes(word_bytes);
+            *word = u64::from_le_bytes(word_bytes);
         }
 
+        let mut state = State { bits };
+        state.mask_unused_bits(); // Using the helper from before
+        state
+    }
+    
+
+    /// Creates a State from any number of byte slices.
+    pub fn from_slices<'a>(slices: &[&'a [u8]]) -> Self { 
+        Self::from_byte_iter(slices.iter().flat_map(|s| s.iter()).copied()) 
+    }
+
+    // Helper function to keep masking logic clean
+    fn mask_unused_bits(&mut self) {
         if IDIM % 64 != 0 {
+            let num_words = (IDIM + 63) / 64;
             let last_word_bits = IDIM % 64;
             let mask = (1u64 << last_word_bits) - 1;
-            bits[num_words - 1] &= mask;
+            if let Some(last_word) = self.bits.get_mut(num_words - 1) {
+                *last_word &= mask;
+            }
         }
-
-        State { bits }
     }
+
+    ///// Creates a State from any number of byte slices.
+    //pub fn from_slices<'a>(slices: &[&'a [u8]]) -> Self {
+    //    let bytes_needed = (IDIM + 7) / 8;
+    //    let total_len: usize = slices.iter().map(|s| s.len()).sum();
+    //    assert!(total_len >= bytes_needed, "Not enough bits in byte slices");
+
+    //    let num_words = (IDIM + 63) / 64;
+    //    let mut bits = vec![0u64; num_words];
+
+    //    let mut byte_iter = slices.iter().flat_map(|slice| slice.iter());
+
+    //    for i in 0..num_words {
+    //        let mut word_bytes = [0u8; 8];
+    //        
+    //        // Pull bytes from the iterator to fill the 8-byte buffer.
+    //        for byte_in_word in word_bytes.iter_mut() {
+    //            let Some(&byte) = byte_iter.next() else {
+    //                break;
+    //            };
+    //            *byte_in_word = byte;
+    //        }
+    //        
+    //        bits[i] = u64::from_le_bytes(word_bytes);
+    //    }
+
+    //    if IDIM % 64 != 0 {
+    //        let last_word_bits = IDIM % 64;
+    //        let mask = (1u64 << last_word_bits) - 1;
+    //        bits[num_words - 1] &= mask;
+    //    }
+
+    //    State { bits }
+    //}
 
     /// Gets the value (0 or 1) of the i-th bit in the state vector.
     pub fn get(&self, i: usize) -> u8 {
